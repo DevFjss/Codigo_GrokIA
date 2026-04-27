@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TESTE CONSULTA - Pesquisa</title>
+  <title>TESTE - Pesquisa</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
     
@@ -17,14 +17,13 @@
     .header {
       background: linear-gradient(135deg, #00c853, #009624);
       color: white;
-      padding: 25px 0;
+      padding: 30px 0;
       text-align: center;
       border-radius: 0 0 15px 15px;
-      margin-bottom: 20px;
     }
-    .titulo { font-size: 2.5rem; font-weight: 700; margin: 0; }
+    .titulo { font-size: 2.6rem; font-weight: 700; margin: 0; }
 
-    .container { max-width: 1450px; margin: 0 auto; }
+    .container { max-width: 1450px; margin: 25px auto; }
 
     #searchInput {
       width: 100%;
@@ -33,7 +32,7 @@
       border: 3px solid #ddd;
       border-radius: 50px;
       outline: none;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     #searchInput:focus {
       border-color: #00c853;
@@ -45,16 +44,13 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-      margin-bottom: 35px;
+      margin-bottom: 40px;
     }
     .sheet-title {
       background: #1e1e1e;
       color: white;
       padding: 18px 25px;
-      font-size: 1.45rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      font-size: 1.5rem;
     }
     table {
       width: 100%;
@@ -68,28 +64,23 @@
       position: sticky;
       top: 0;
       z-index: 10;
-      border-bottom: 2px solid #ddd;
     }
     td {
       padding: 13px 12px;
       border-bottom: 1px solid #eee;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 280px;
     }
     tr:hover {
       background-color: #f0fff0;
     }
-    .valor { 
-      text-align: right; 
+    .valor {
+      text-align: right;
       font-weight: 500;
       color: #006400;
     }
     .loading, .error {
       text-align: center;
-      padding: 80px 20px;
-      font-size: 1.35rem;
+      padding: 100px 20px;
+      font-size: 1.4rem;
     }
     .error { color: #d32f2f; }
   </style>
@@ -97,64 +88,49 @@
 <body>
 
   <div class="header">
-    <h1 class="titulo">TESTE CONSULTA</h1>
+    <h1 class="titulo">TESTE</h1>
   </div>
 
   <div class="container">
-    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna (Município, Escola, Valor, Data...)">
+    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna...">
 
     <div id="content">
-      <div class="loading">🔄 Carregando todas as abas da planilha...</div>
+      <div class="loading">🔄 Tentando carregar a aba principal...</div>
     </div>
   </div>
 
   <script>
     const SPREADSHEET_ID = "17hskWwX1cJP6NDuctKgTP3O8ct4WM-xcFnxKYRrHMCY";
-    
+    const GID = "894202913";
+
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
 
-    // Lista de GIDs conhecidos (adicione mais se precisar)
-    const sheetsToLoad = [
-      { gid: "894202913", name: "Aba Principal" },
-      // Adicione outras abas aqui se souber o gid: { gid: "123456789", name: "Outra Aba" }
-    ];
+    async function carregarDados() {
+      content.innerHTML = '<div class="loading">🔄 Carregando dados...</div>';
 
-    async function carregarTodasAbas() {
-      content.innerHTML = '<div class="loading">🔄 Carregando abas...</div>';
-
-      for (const sheet of sheetsToLoad) {
-        await carregarAba(sheet.gid, sheet.name);
-      }
-
-      if (content.innerHTML.includes('loading')) {
-        content.innerHTML = '<div class="error">Nenhuma aba carregada. Verifique se a planilha está pública.</div>';
-      }
-    }
-
-    async function carregarAba(gid, nomePadrao) {
       try {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${gid}`;
-        const res = await fetch(url);
-        if (!res.ok) return;
+        // Método mais estável em 2026: gviz com tqx=out:csv
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID}&tqx=out:csv`;
 
-        const csvText = await res.text();
-        const linhas = csvText.trim().split('\n').map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Falha na resposta');
 
-        if (linhas.length < 2) return;
+        const csvText = await response.text();
+        
+        // Parse simples do CSV
+        const linhas = csvText.trim().split('\n').map(row => {
+          return row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
+        });
+
+        if (linhas.length < 2) throw new Error('Dados vazios');
 
         const headers = linhas[0];
         const dados = linhas.slice(1);
 
-        // Nome da aba (usa o primeiro header ou nome padrão)
-        let nomeAba = nomePadrao;
-        if (headers[0] && headers[0].length > 2) nomeAba = headers[0];
-
         let html = `
           <div class="sheet-container">
-            <div class="sheet-title">
-              ${nomeAba} <small>(${dados.length} registros)</small>
-            </div>
+            <div class="sheet-title">Aba Principal — ${dados.length} registros</div>
             <table>
               <thead><tr>`;
 
@@ -166,62 +142,57 @@
 
         dados.forEach(linha => {
           html += `<tr>`;
-          linha.forEach((celula, i) => {
-            const header = headers[i] || '';
+          linha.forEach((celula, index) => {
+            const headerName = headers[index] ? headers[index].toLowerCase() : '';
             let classe = '';
-            let valorFormatado = celula;
 
-            // Formata colunas que contêm "Valor" como moeda brasileira
-            if (header.toLowerCase().includes('valor')) {
+            // Formata automaticamente colunas que têm "valor" no nome
+            if (headerName.includes('valor')) {
               classe = 'valor';
               const num = parseFloat(celula.replace(/[^0-9.,-]/g, '').replace(',', '.'));
               if (!isNaN(num)) {
-                valorFormatado = num.toLocaleString('pt-BR', { 
+                celula = num.toLocaleString('pt-BR', { 
                   style: 'currency', 
-                  currency: 'BRL' 
+                  currency: 'BRL',
+                  minimumFractionDigits: 2 
                 });
               }
             }
 
-            html += `<td class="${classe}">${valorFormatado}</td>`;
+            html += `<td class="${classe}">${celula}</td>`;
           });
           html += `</tr>`;
         });
 
         html += `</tbody></table></div>`;
-        content.innerHTML += html;
+        content.innerHTML = html;
 
-      } catch (e) {
-        console.error(`Erro na aba ${gid}:`, e);
+      } catch (err) {
+        console.error(err);
+        content.innerHTML = `
+          <div class="error">
+            ❌ Não foi possível carregar os dados.<br><br>
+            <strong>O que fazer agora:</strong><br>
+            1. Abra sua planilha<br>
+            2. Clique em <strong>Compartilhar</strong> → confirme que está "<strong>Qualquer pessoa com o link pode visualizar</strong>"<br>
+            3. Pressione <strong>Ctrl + Shift + R</strong> aqui nesta página (recarregar sem cache)<br><br>
+            Se ainda não funcionar, me envie a mensagem que aparece no Console (pressione F12 → aba Console).
+          </div>`;
       }
     }
 
-    // Filtro rápido e eficiente
-    function aplicarFiltro() {
+    // Filtro rápido
+    searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
-      const tabelas = document.querySelectorAll('.sheet-container');
+      const linhas = document.querySelectorAll('tbody tr');
 
-      tabelas.forEach(tabela => {
-        const linhas = tabela.querySelectorAll('tbody tr');
-        let visiveis = 0;
-
-        linhas.forEach(linha => {
-          if (linha.textContent.toLowerCase().includes(termo)) {
-            linha.style.display = '';
-            visiveis++;
-          } else {
-            linha.style.display = 'none';
-          }
-        });
-
-        tabela.style.display = (visiveis > 0 || termo === '') ? 'block' : 'none';
+      linhas.forEach(linha => {
+        linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
       });
-    }
-
-    searchInput.addEventListener('input', aplicarFiltro);
+    });
 
     // Iniciar
-    window.onload = carregarTodasAbas;
+    window.onload = carregarDados;
   </script>
 </body>
 </html>
