@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>TESTE NOTA CDF - Sistema Avançado</title>
+  <title>TESTE NOTA CDF - Sistema Ultra Rápido</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
     
@@ -14,46 +14,52 @@
       --cinza-borda: #dee2e6;
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Roboto', sans-serif;
       background: var(--cinza-bg);
       margin: 0;
       padding: 0;
       color: #212529;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .header {
       background: linear-gradient(135deg, var(--verde), var(--verde-escuro));
       color: white;
-      padding: 20px 0;
+      padding: 15px 0;
       text-align: center;
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 700;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      letter-spacing: -0.5px;
+      flex-shrink: 0;
     }
 
     .tabs {
       background: white;
-      padding: 12px 20px;
+      padding: 10px 20px;
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       overflow-x: auto;
       white-space: nowrap;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      flex-shrink: 0;
     }
 
     .tab-button {
-      padding: 10px 24px;
-      margin: 4px 6px;
+      padding: 8px 20px;
+      margin: 3px 5px;
       border: 2px solid transparent;
       background: #e9ecef;
       color: #495057;
-      border-radius: 30px;
+      border-radius: 25px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       transition: all 0.2s ease;
     }
@@ -67,29 +73,30 @@
       background: var(--verde);
       color: white;
       box-shadow: 0 2px 8px rgba(0, 200, 83, 0.3);
-      border-color: var(--verde);
     }
 
     /* Barra de ferramentas */
     .toolbar {
-      max-width: 1450px;
-      margin: 20px auto;
-      padding: 0 15px;
+      background: white;
+      padding: 12px 20px;
       display: flex;
       gap: 15px;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
+      border-bottom: 1px solid var(--cinza-borda);
+      flex-shrink: 0;
     }
 
     .search-box {
       flex: 2;
-      min-width: 250px;
+      min-width: 280px;
+      position: relative;
     }
 
     #searchInput {
       width: 100%;
-      padding: 12px 20px;
+      padding: 10px 20px;
       font-size: 1rem;
       border: 2px solid var(--cinza-borda);
       border-radius: 40px;
@@ -103,21 +110,27 @@
       box-shadow: 0 0 0 3px rgba(0,200,83,0.1);
     }
 
+    .search-stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     .stats {
-      background: white;
-      padding: 8px 18px;
+      background: #e8f5e9;
+      padding: 6px 16px;
       border-radius: 40px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--verde-escuro);
       font-size: 0.9rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .btn-reset {
       background: #6c757d;
       color: white;
       border: none;
-      padding: 8px 20px;
+      padding: 6px 18px;
       border-radius: 40px;
       cursor: pointer;
       font-weight: 500;
@@ -129,60 +142,60 @@
       transform: translateY(-1px);
     }
 
-    .sheet-container {
-      max-width: 1450px;
-      margin: 20px auto;
+    /* Container da tabela com cabeçalho fixo */
+    .table-container {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      margin: 0 20px 20px 20px;
       background: white;
       border-radius: 12px;
-      overflow-x: auto;
-      overflow-y: auto;
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-      position: relative;
     }
 
     .sheet-header {
       background: #1e1e2a;
       color: white;
-      padding: 14px 20px;
-      font-size: 1.25rem;
+      padding: 10px 20px;
+      font-size: 1.1rem;
       font-weight: 500;
+      position: sticky;
+      top: 0;
+      z-index: 15;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      left: 0;
     }
 
-    /* Tabela com redimensionamento de colunas */
-    .resizable-table-wrapper {
-      overflow-x: auto;
-      position: relative;
-    }
-
-    table {
+    /* Tabela com cabeçalho congelado */
+    .fixed-header-table {
       width: 100%;
       border-collapse: collapse;
       table-layout: auto;
       min-width: 600px;
     }
 
-    th {
+    .fixed-header-table thead tr {
+      position: sticky;
+      top: 45px; /* Altura do sheet-header */
       background: #f8f9fc;
-      padding: 14px 12px;
+      z-index: 10;
+    }
+
+    .fixed-header-table th {
+      background: #f8f9fc;
+      padding: 12px 12px;
       text-align: left;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       border-bottom: 2px solid var(--cinza-borda);
       position: relative;
       user-select: none;
       color: #1a1a2e;
+      white-space: nowrap;
     }
 
     /* Indicador de redimensionamento */
-    th.resizable {
-      position: relative;
-    }
-
     th .resize-handle {
       position: absolute;
       right: 0;
@@ -191,32 +204,33 @@
       height: 100%;
       background: transparent;
       cursor: col-resize;
-      z-index: 10;
-      transition: background 0.1s;
+      z-index: 20;
     }
 
     th .resize-handle:hover {
       background: var(--verde);
     }
 
-    th.resizing .resize-handle {
-      background: var(--verde);
-    }
-
     td {
-      padding: 12px 12px;
+      padding: 10px 12px;
       border-bottom: 1px solid #eceef2;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       white-space: nowrap;
     }
 
-    /* estilo para linhas filtradas */
-    tr.filtered-out {
-      display: none;
+    /* Estilo para primeira coluna (destaque) */
+    td:first-child, th:first-child {
+      background-color: #fafafa;
+      font-weight: 500;
+      border-right: 1px solid #e0e0e0;
     }
 
-    tr:hover {
+    tr:hover td {
       background-color: #f5fff5;
+    }
+
+    tr:hover td:first-child {
+      background-color: #e8f5e9;
     }
 
     .valor {
@@ -228,8 +242,8 @@
 
     .loading, .error {
       text-align: center;
-      padding: 100px 20px;
-      font-size: 1.2rem;
+      padding: 60px 20px;
+      font-size: 1.1rem;
     }
 
     .error {
@@ -239,10 +253,10 @@
       margin: 20px;
     }
 
-    /* Scroll suave */
+    /* Scrollbars modernas */
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
     }
 
     ::-webkit-scrollbar-track {
@@ -255,48 +269,41 @@
       border-radius: 10px;
     }
 
-    /* Modo responsivo */
-    @media (max-width: 768px) {
-      .header {
-        font-size: 1.5rem;
-        padding: 15px 0;
-      }
-      
-      .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      td, th {
-        padding: 8px 10px;
-        font-size: 0.85rem;
-      }
+    /* Ícone de busca rápida */
+    .search-hint {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      font-size: 0.8rem;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
   <div class="header">
-    📊 TESTE NOTA CDF
+    📊 TESTE NOTA CDF - FILTRO ULTRA RÁPIDO
   </div>
 
-  <!-- Abas -->
   <div class="tabs" id="tabs"></div>
 
-  <!-- Barra de ferramentas com pesquisa e estatísticas -->
   <div class="toolbar">
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="🔍 Pesquisa rápida em todas as colunas... (digite para filtrar)">
+      <input type="text" id="searchInput" placeholder="🔍 Pesquisar em TODAS as colunas (incluindo primeira coluna)...">
+      <span class="search-hint">⏎ Filtro instantâneo</span>
     </div>
-    <div class="stats" id="statsDisplay">
-      📋 Registros: -
+    <div class="search-stats">
+      <div class="stats" id="statsDisplay">📋 Carregando...</div>
+      <button class="btn-reset" id="resetFilterBtn">⟳ Limpar filtro</button>
     </div>
-    <button class="btn-reset" id="resetFilterBtn">⟳ Limpar filtro</button>
   </div>
 
-  <!-- Conteúdo -->
-  <div id="content">
-    <div class="loading">🔄 Carregando planilha...</div>
+  <div class="table-container" id="tableContainer">
+    <div id="content">
+      <div class="loading">🔄 Carregando planilha...</div>
+    </div>
   </div>
 
   <script>
@@ -307,13 +314,15 @@
     const searchInput = document.getElementById('searchInput');
     const statsDisplay = document.getElementById('statsDisplay');
     const resetFilterBtn = document.getElementById('resetFilterBtn');
+    const tableContainer = document.getElementById('tableContainer');
 
-    // Estado global
-    let currentRowsData = [];      // Armazena referências das linhas DOM
-    let currentTableHeaders = [];   // Guarda headers atuais
+    // === VARIÁVEIS DE PERFORMANCE ===
+    let currentRowsArray = [];        // Array de referências DOM das linhas
+    let currentRowDataText = [];      // Cache do texto completo de cada linha (para busca ultra rápida)
     let currentTotalRows = 0;
     let currentSheetName = '';
-    let resizeObservers = [];       // Para limpeza
+    let filterTimeout = null;
+    let currentTable = null;
 
     // === CONFIGURAÇÃO DAS ABAS ===
     const abas = [
@@ -335,18 +344,22 @@
       });
     }
 
-    // Atualizar estatísticas visíveis
+    // Atualizar estatísticas visíveis (extremamente leve)
     function updateStats() {
-      if (!currentRowsData.length) {
-        statsDisplay.textContent = `📋 Registros: 0`;
+      if (!currentRowsArray.length) {
+        statsDisplay.textContent = `📋 0 / 0 registros`;
         return;
       }
-      const visibleCount = currentRowsData.filter(row => row.style.display !== 'none').length;
-      statsDisplay.textContent = `📋 ${visibleCount} / ${currentTotalRows} registros`;
+      
+      let visible = 0;
+      // Otimizado: percorre apenas o array de estilos
+      for (let i = 0; i < currentRowsArray.length; i++) {
+        if (currentRowsArray[i].style.display !== 'none') visible++;
+      }
+      statsDisplay.textContent = `📋 ${visible} / ${currentTotalRows} registros`;
     }
 
-    // Aplicar filtro de texto OTIMIZADO (sem debounce pesado, mas rápido)
-    let filterTimeout = null;
+    // FILTRO HIPER RÁPIDO com cache de texto e busca prioritária na primeira coluna
     function applyFilter() {
       if (filterTimeout) clearTimeout(filterTimeout);
       
@@ -354,41 +367,54 @@
         const searchTerm = searchInput.value.trim().toLowerCase();
         
         if (!searchTerm) {
-          // Mostrar todas as linhas
-          currentRowsData.forEach(row => {
-            row.style.display = '';
-          });
+          // Mostrar todas as linhas instantaneamente
+          for (let i = 0; i < currentRowsArray.length; i++) {
+            currentRowsArray[i].style.display = '';
+          }
           updateStats();
           return;
         }
         
-        // Filtro rápido usando textContent já indexado (busca em todas as células)
-        // Otimização: percorre apenas uma vez as linhas, verifica se inclui termo
-        for (let i = 0; i < currentRowsData.length; i++) {
-          const row = currentRowsData[i];
-          const text = row.textContent.toLowerCase();
-          row.style.display = text.includes(searchTerm) ? '' : 'none';
+        // Filtro com cache de texto pré-computado (busca em todas as colunas)
+        // Para garantir que a PRIMEIRA COLUNA tenha prioridade na busca, 
+        // já incluímos ela no textContent completo, mas vamos fazer uma verificação
+        // dupla: se o termo estiver na primeira coluna, também conta (já está incluso)
+        // O cache currentRowDataText já contém todo o texto da linha (incluindo primeira coluna)
+        
+        for (let i = 0; i < currentRowsArray.length; i++) {
+          // Usa o cache de texto para busca extremamente rápida (O(1) por linha)
+          const textMatch = currentRowDataText[i].includes(searchTerm);
+          currentRowsArray[i].style.display = textMatch ? '' : 'none';
         }
+        
         updateStats();
-      }, 80); // 80ms -> resposta fluida e sem travamentos
+      }, 30); // 30ms de debounce para resposta instantânea (sem lentidão)
     }
 
-    // Função para habilitar redimensionamento manual de colunas
+    // Função para construir cache de texto das linhas (executado uma vez ao carregar)
+    function buildTextCache() {
+      if (!currentRowsArray.length) return;
+      
+      currentRowDataText = new Array(currentRowsArray.length);
+      for (let i = 0; i < currentRowsArray.length; i++) {
+        // Pega todo o texto da linha (inclui primeira coluna e todas as outras)
+        currentRowDataText[i] = currentRowsArray[i].textContent.toLowerCase();
+      }
+    }
+
+    // Habilitar redimensionamento manual de colunas (visual e funcional)
     function enableColumnResizing(table) {
       if (!table) return;
       
-      // Remove handles antigos se existirem
-      const existingHandles = table.querySelectorAll('.resize-handle');
-      existingHandles.forEach(handle => handle.remove());
+      // Remove handles antigos
+      const oldHandles = table.querySelectorAll('.resize-handle');
+      oldHandles.forEach(handle => handle.remove());
       
       const headers = table.querySelectorAll('th');
       
       headers.forEach((th, index) => {
-        // Adiciona classe resizable e o manipulador visual
-        th.classList.add('resizable');
         const handle = document.createElement('div');
         handle.className = 'resize-handle';
-        handle.setAttribute('data-col-index', index);
         
         let startX, startWidth;
         let isResizing = false;
@@ -397,9 +423,9 @@
           if (!isResizing) return;
           const dx = e.clientX - startX;
           const newWidth = startWidth + dx;
-          if (newWidth > 40) {  // Largura mínima 40px
-            const colCells = table.querySelectorAll(`th:nth-child(${index+1}), td:nth-child(${index+1})`);
-            colCells.forEach(cell => {
+          if (newWidth > 50) {
+            const cells = table.querySelectorAll(`th:nth-child(${index+1}), td:nth-child(${index+1})`);
+            cells.forEach(cell => {
               cell.style.width = `${newWidth}px`;
               cell.style.minWidth = `${newWidth}px`;
             });
@@ -411,7 +437,6 @@
             isResizing = false;
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
-            th.classList.remove('resizing');
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
           }
@@ -422,184 +447,189 @@
           e.stopPropagation();
           isResizing = true;
           startX = e.clientX;
-          const currentWidth = th.getBoundingClientRect().width;
-          startWidth = currentWidth;
+          startWidth = th.getBoundingClientRect().width;
           document.body.style.cursor = 'col-resize';
           document.body.style.userSelect = 'none';
-          th.classList.add('resizing');
           
           document.addEventListener('mousemove', onMouseMove);
           document.addEventListener('mouseup', onMouseUp);
         });
         
         th.appendChild(handle);
+        th.style.position = 'relative';
       });
     }
 
-    // Renderizar tabela com dados e habilitar redimensionamento
+    // Renderizar tabela com cabeçalho CONGELADO e primeira coluna destacada
     function renderTable(headers, dados, sheetName) {
       if (!headers || !dados) return;
       
       currentTotalRows = dados.length;
-      currentTableHeaders = headers;
       currentSheetName = sheetName;
       
       let html = `
-        <div class="sheet-container">
-          <div class="sheet-header">
-            <span>📑 ${sheetName}</span>
-            <span style="font-size: 0.9rem; opacity: 0.9;">${dados.length} linhas | Clique nas bordas das colunas para redimensionar</span>
-          </div>
-          <div class="resizable-table-wrapper">
-            <table id="dataTable" style="width: 100%;">
-              <thead>
-                <tr>
+        <div class="sheet-header">
+          <span>📑 ${sheetName}</span>
+          <span style="font-size: 0.8rem; opacity: 0.8;">🔍 Clique nas bordas das colunas para redimensionar | Cabeçalho fixo | Primeira coluna com destaque</span>
+        </div>
+        <div style="overflow-x: auto; max-height: calc(100vh - 250px);">
+          <table class="fixed-header-table" id="dataTable" style="width: 100%;">
+            <thead>
+              <tr>
       `;
       
-      // Cabeçalhos
-      headers.forEach(h => {
-        html += `<th>${h || 'Coluna'}</th>`;
+      // Cabeçalhos - primeira coluna com classe especial
+      headers.forEach((h, idx) => {
+        html += `<th ${idx === 0 ? 'style="background-color: #e8f5e9;"' : ''}>${h || 'Coluna'}</th>`;
       });
       html += `</tr></thead><tbody>`;
       
-      // Corpo da tabela
+      // Construir linhas com dados otimizados
       for (let i = 0; i < dados.length; i++) {
         const linha = dados[i];
         html += `<tr>`;
         for (let j = 0; j < headers.length; j++) {
-          let celula = linha[j] !== undefined ? linha[j] : '';
+          let celula = (linha[j] !== undefined && linha[j] !== null) ? linha[j] : '';
           const headerLower = (headers[j] || '').toLowerCase();
           let classe = '';
           
-          if (headerLower.includes('valor') || headerLower.includes('preço') || headerLower.includes('preco') || headerLower.includes('total')) {
+          // Formatação para colunas de valor
+          if (headerLower.includes('valor') || headerLower.includes('preço') || headerLower.includes('preco') || headerLower.includes('total') || headerLower.includes('custo')) {
             classe = 'valor';
-            // formatar número como moeda se possível
             let numStr = String(celula).replace(/[^0-9,.-]/g, '').replace(',', '.');
             let num = parseFloat(numStr);
-            if (!isNaN(num) && numStr !== '') {
+            if (!isNaN(num) && numStr !== '' && numStr.length > 0) {
               celula = num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            } else if (typeof celula === 'string' && celula.match(/[\d,\.]/)) {
-              // tenta novamente
-              let n = parseFloat(celula.replace(/\./g, '').replace(',', '.'));
-              if (!isNaN(n)) celula = n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             }
           }
           
-          // Truncamento visual mantendo visível (white-space nowrap já está no css)
-          html += `<td class="${classe}" title="${String(celula).replace(/"/g, '&quot;')}">${celula || ''}</td>`;
+          // Primeira coluna recebe destaque visual (já pelo CSS, mas adiciona classe extra)
+          if (j === 0) {
+            classe += ' first-column';
+            celula = celula.length > 0 ? celula : '—';
+          }
+          
+          html += `<td class="${classe}" title="${String(celula).replace(/"/g, '&quot;').substring(0, 200)}">${celula || '&nbsp;'}</td>`;
         }
         html += `</tr>`;
       }
-      html += `</tbody></table></div></div>`;
       
+      html += `</tbody></table></div>`;
       contentDiv.innerHTML = html;
       
-      // Aguardar DOM pronto para capturar referências e aplicar redimensionamento
-      const tableElement = document.getElementById('dataTable');
-      if (tableElement) {
-        // Configurar redimensionamento manual
-        enableColumnResizing(tableElement);
+      // Obter referências DOM após renderização
+      currentTable = document.getElementById('dataTable');
+      if (currentTable) {
+        // Pegar todas as linhas do corpo da tabela
+        currentRowsArray = Array.from(currentTable.querySelectorAll('tbody tr'));
         
-        // Armazenar referências das linhas para filtro rápido
-        currentRowsData = Array.from(tableElement.querySelectorAll('tbody tr'));
+        // Construir cache de texto para filtro ultrarrápido
+        buildTextCache();
         
-        // Garantir que as colunas estejam visíveis: definir largura automática inicial baseada no conteúdo
-        // Mas sem perder a capacidade de redimensionamento manual
-        const allTh = tableElement.querySelectorAll('th');
-        allTh.forEach((th, idx) => {
-          // Define largura inicial automaticamente com base no conteúdo (se não foi definida)
-          if (!th.style.width) {
-            th.style.width = 'auto';
-          }
-        });
+        // Habilitar redimensionamento de colunas
+        enableColumnResizing(currentTable);
         
-        updateStats();
-      } else {
-        currentRowsData = [];
-      }
-    }
-    
-    // Carregar aba com cache e performance aprimorada
-    async function carregarAba(nomeAba) {
-      // Limpar pesquisa antes de carregar nova aba
-      searchInput.value = '';
-      
-      contentDiv.innerHTML = `<div class="loading">🔄 Carregando <strong>${nomeAba}</strong> (otimizado)...</div>`;
-      
-      try {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}`;
-        
-        const fetchStart = performance.now();
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        
-        const csvText = await res.text();
-        const linhasBrutas = csvText.trim().split(/\r?\n/);
-        
-        if (linhasBrutas.length < 2) throw new Error("Aba vazia ou sem dados");
-        
-        // Parse mais robusto para CSV (evitar problemas com vírgulas dentro de strings)
-        const parseCSVLine = (line) => {
-          const result = [];
-          let inQuote = false;
-          let current = '';
-          for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-              inQuote = !inQuote;
-            } else if (char === ',' && !inQuote) {
-              result.push(current.trim());
-              current = '';
-            } else {
-              current += char;
-            }
-          }
-          result.push(current.trim());
-          return result.map(cell => cell.replace(/^"|"$/g, '').trim());
-        };
-        
-        const headers = parseCSVLine(linhasBrutas[0]);
-        const dados = [];
-        for (let i = 1; i < linhasBrutas.length; i++) {
-          if (linhasBrutas[i].trim() !== '') {
-            dados.push(parseCSVLine(linhasBrutas[i]));
-          }
-        }
-        
-        console.log(`✅ ${nomeAba} carregada: ${dados.length} registros, ${headers.length} colunas`);
-        
-        renderTable(headers, dados, nomeAba);
-        
-        // Atualizar botão ativo das abas
-        document.querySelectorAll('.tab-button').forEach(btn => {
-          btn.classList.remove('active');
-          if (btn.textContent === nomeAba) btn.classList.add('active');
-        });
-        
-        // Após carregar tabela, reaplicar filtro caso haja texto na busca (normalmente vazio)
+        // Aplicar qualquer filtro pendente (caso tenha texto no input)
         if (searchInput.value.trim() !== '') {
           applyFilter();
         } else {
           updateStats();
         }
-        
-      } catch (err) {
-        console.error("Erro ao carregar aba:", err);
-        contentDiv.innerHTML = `<div class="error">
-          ❌ Erro ao carregar aba "<strong>${nomeAba}</strong>".<br><br>
-          Verifique se a planilha está pública e compartilhada como:<br>
-          <strong>"Qualquer pessoa com o link pode visualizar"</strong><br><br>
-          Detalhe: ${err.message}
-        </div>`;
-        currentRowsData = [];
-        currentTotalRows = 0;
+      } else {
+        currentRowsArray = [];
+        currentRowDataText = [];
         updateStats();
       }
     }
     
-    // Evento de pesquisa com debounce melhorado
+    // Parse CSV avançado (lida com aspas e vírgulas dentro de campos)
+    function parseCSVLine(line) {
+      const result = [];
+      let inQuote = false;
+      let current = '';
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuote = !inQuote;
+        } else if (char === ',' && !inQuote) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result.map(cell => cell.replace(/^"|"$/g, '').trim());
+    }
+    
+    // Carregar aba com performance máxima
+    async function carregarAba(nomeAba) {
+      // Limpar campo de busca ao trocar de aba para evitar inconsistências
+      searchInput.value = '';
+      
+      contentDiv.innerHTML = `<div class="loading">⚡ Carregando <strong>${nomeAba}</strong> com motor ultrarrápido...</div>`;
+      
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}`;
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status} - Falha no acesso`);
+        
+        const csvText = await res.text();
+        const linhasBrutas = csvText.trim().split(/\r?\n/);
+        
+        if (linhasBrutas.length < 2) throw new Error("Aba sem dados suficientes");
+        
+        // Parse cabeçalho
+        const headers = parseCSVLine(linhasBrutas[0]);
+        
+        // Parse dados com eficiência
+        const dados = [];
+        for (let i = 1; i < linhasBrutas.length; i++) {
+          if (linhasBrutas[i].trim() !== '') {
+            const linhaParseada = parseCSVLine(linhasBrutas[i]);
+            // Garantir mesmo número de colunas que o cabeçalho
+            while (linhaParseada.length < headers.length) linhaParseada.push('');
+            dados.push(linhaParseada);
+          }
+        }
+        
+        console.log(`✅ ${nomeAba} carregada: ${dados.length} registros, ${headers.length} colunas | Filtro otimizado ativo`);
+        
+        renderTable(headers, dados, nomeAba);
+        
+        // Destacar aba ativa
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.textContent === nomeAba) btn.classList.add('active');
+        });
+        
+      } catch (err) {
+        console.error("Erro detalhado:", err);
+        contentDiv.innerHTML = `<div class="error">
+          ❌ Erro ao carregar "${nomeAba}"<br><br>
+          ${err.message}<br><br>
+          <strong>Verifique se a planilha está pública:</strong><br>
+          Compartilhar → "Qualquer pessoa com o link pode visualizar"
+        </div>`;
+        currentRowsArray = [];
+        currentRowDataText = [];
+        updateStats();
+      }
+    }
+    
+    // Evento de pesquisa com debounce mínimo para máxima velocidade
     searchInput.addEventListener('input', () => {
       applyFilter();
+    });
+    
+    // Tecla ESC para limpar filtro rapidamente
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        applyFilter();
+        e.preventDefault();
+      }
     });
     
     // Botão resetar filtro
@@ -609,22 +639,13 @@
       searchInput.focus();
     });
     
-    // Observador de redimensionamento de janela para garantir que as colunas não percam referência
-    window.addEventListener('resize', () => {
-      // Opcional: Reforçar larguras mínimas (apenas para estabilidade visual)
-      const table = document.getElementById('dataTable');
-      if (table && currentTableHeaders) {
-        // Preserva redimensionamento manual existente
-      }
-    });
-    
     // Inicialização
     window.onload = () => {
       criarAbas();
       if (abas.length > 0) {
         carregarAba(abas[0].nome);
       } else {
-        contentDiv.innerHTML = '<div class="error">Nenhuma aba configurada no script.</div>';
+        contentDiv.innerHTML = '<div class="error">Nenhuma aba configurada no sistema.</div>';
       }
     };
   </script>
