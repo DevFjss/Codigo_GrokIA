@@ -15,87 +15,95 @@
       color: #333;
     }
     .header {
-      background: linear-gradient(135deg, #00c853, #009624);
+      background: #00c853;
       color: white;
-      padding: 30px 0;
+      padding: 20px 0;
       text-align: center;
+      font-size: 2.4rem;
+      font-weight: 700;
     }
-    .titulo { font-size: 2.6rem; font-weight: 700; margin: 0; }
-
     .tabs {
       background: white;
-      padding: 15px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
+      padding: 15px 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     .tab-button {
-      padding: 12px 24px;
+      padding: 10px 24px;
+      margin: 5px;
       border: none;
       background: #e0e0e0;
       color: #333;
       border-radius: 30px;
       cursor: pointer;
       font-size: 1.05rem;
+      font-weight: 500;
     }
     .tab-button.active {
       background: #00c853;
       color: white;
     }
-
-    .container { max-width: 1450px; margin: 20px auto; padding: 0 15px; }
-
+    .search-box {
+      max-width: 800px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
     #searchInput {
       width: 100%;
-      padding: 18px 25px;
-      font-size: 1.2rem;
-      border: 3px solid #ddd;
+      padding: 16px 20px;
+      font-size: 1.15rem;
+      border: 2px solid #ddd;
       border-radius: 50px;
       outline: none;
-      margin-bottom: 25px;
     }
     #searchInput:focus {
       border-color: #00c853;
-      box-shadow: 0 0 0 5px rgba(0,200,83,0.2);
+      box-shadow: 0 0 0 4px rgba(0,200,83,0.15);
     }
-
     .sheet-container {
+      max-width: 1400px;
+      margin: 20px auto;
       background: white;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     }
-    .sheet-title {
+    .sheet-header {
       background: #1e1e1e;
       color: white;
-      padding: 18px 25px;
-      font-size: 1.5rem;
+      padding: 16px 25px;
+      font-size: 1.4rem;
+      font-weight: 500;
     }
-    table { width: 100%; border-collapse: collapse; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
     th {
-      background: #f1f3f5;
-      padding: 15px 12px;
+      background: #f8f9fa;
+      padding: 14px 12px;
       text-align: left;
+      font-weight: 600;
       position: sticky;
       top: 0;
       z-index: 10;
     }
     td {
-      padding: 13px 12px;
+      padding: 12px 14px;
       border-bottom: 1px solid #eee;
     }
-    tr:hover { background-color: #f0fff0; }
+    tr:hover {
+      background-color: #f0fff0;
+    }
     .valor {
       text-align: right;
-      font-weight: 500;
       color: #006400;
+      font-weight: 500;
     }
     .loading, .error {
       text-align: center;
-      padding: 100px 20px;
-      font-size: 1.4rem;
+      padding: 80px;
+      font-size: 1.3rem;
     }
     .error { color: #d32f2f; }
   </style>
@@ -103,17 +111,17 @@
 <body>
 
   <div class="header">
-    <h1 class="titulo">TESTE NOTA CDF</h1>
+    TESTE NOTA CDF
   </div>
 
   <div class="tabs" id="tabs"></div>
 
-  <div class="container">
+  <div class="search-box">
     <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna...">
+  </div>
 
-    <div id="content">
-      <div class="loading">🔄 Detectando abas da planilha...</div>
-    </div>
+  <div id="content">
+    <div class="loading">🔄 Carregando abas...</div>
   </div>
 
   <script>
@@ -123,12 +131,14 @@
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
 
-    // === Coloque aqui os nomes exatos das abas da sua planilha ===
+    // Lista de abas (coloque os nomes exatos que aparecem na sua planilha)
     const abas = [
-      { nome: "GeradorManut", gid: "894202913" },
-      // Adicione as outras abas aqui (substitua "NomeDaAba" pelo nome real):
-      // { nome: "GeradorFaed", gid: "OUTRO_GID" },
-      // { nome: "BaseOrdinaria", gid: "OUTRO_GID" },
+      { nome: "GeradorManut" },
+      { nome: "GeradorFaed" },
+      { nome: "BaseOrdinaria" },
+      { nome: "Retorno439" }
+      // Adicione mais abas aqui se tiver:
+      // { nome: "Nome da Outra Aba" }
     ];
 
     function criarAbas() {
@@ -143,28 +153,27 @@
     }
 
     async function carregarAba(nomeAba) {
-      content.innerHTML = `<div class="loading">🔄 Carregando aba: ${nomeAba}...</div>`;
+      content.innerHTML = `<div class="loading">🔄 Carregando ${nomeAba}...</div>`;
 
       try {
-        // Método mais estável atualmente
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}`;
-
+        
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Falha ao acessar');
+        if (!res.ok) throw new Error("Não foi possível acessar");
 
         const csvText = await res.text();
         const linhas = csvText.trim().split('\n').map(row => 
           row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim())
         );
 
-        if (linhas.length < 2) throw new Error('Aba vazia');
+        if (linhas.length < 2) throw new Error("Aba vazia");
 
         const headers = linhas[0];
         const dados = linhas.slice(1);
 
         let html = `
           <div class="sheet-container">
-            <div class="sheet-title">${nomeAba} — ${dados.length} registros</div>
+            <div class="sheet-header">${nomeAba} — ${dados.length} registros</div>
             <table>
               <thead><tr>`;
 
@@ -193,22 +202,18 @@
         html += `</tbody></table></div>`;
         content.innerHTML = html;
 
-        // Ativa o botão
+        // Ativa o botão da aba
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        const active = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
-        if (active) active.classList.add('active');
+        const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
+        if (activeBtn) activeBtn.classList.add('active');
 
       } catch (err) {
         console.error(err);
-        content.innerHTML = `<div class="error">
-          ❌ Não conseguiu carregar a aba "${nomeAba}".<br><br>
-          Certifique-se que a planilha está compartilhada como:<br>
-          <strong>"Qualquer pessoa com o link pode visualizar"</strong>
-        </div>`;
+        content.innerHTML = `<div class="error">❌ Não conseguiu carregar "${nomeAba}".<br>Confira se a planilha está pública (Qualquer pessoa com o link pode visualizar).</div>`;
       }
     }
 
-    // Filtro
+    // Filtro em tempo real
     searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
       const linhas = document.querySelectorAll('#content tbody tr');
@@ -220,7 +225,7 @@
     // Iniciar
     window.onload = () => {
       criarAbas();
-      if (abas.length > 0) carregarAba(abas[0].nome);   // carrega primeira aba
+      if (abas.length > 0) carregarAba(abas[0].nome);
     };
   </script>
 </body>
