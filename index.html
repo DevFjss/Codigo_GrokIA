@@ -24,26 +24,29 @@
 
     .tabs {
       background: white;
-      padding: 12px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 15px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
+      overflow-x: auto;
     }
     .tab-button {
-      padding: 10px 20px;
+      padding: 12px 22px;
       border: none;
       background: #e0e0e0;
       color: #333;
-      border-radius: 25px;
+      border-radius: 30px;
       cursor: pointer;
       font-weight: 500;
+      white-space: nowrap;
       transition: all 0.3s;
     }
     .tab-button.active {
       background: #00c853;
       color: white;
+      box-shadow: 0 4px 12px rgba(0,200,83,0.3);
     }
 
     .container { max-width: 1450px; margin: 20px auto; padding: 0 15px; }
@@ -101,7 +104,7 @@
     }
     .loading, .error {
       text-align: center;
-      padding: 80px;
+      padding: 80px 20px;
       font-size: 1.4rem;
     }
     .error { color: #d32f2f; }
@@ -113,14 +116,14 @@
     <h1 class="titulo">TESTE NOTA CDF</h1>
   </div>
 
-  <!-- Abas (Tabs) -->
+  <!-- Abas detectadas automaticamente -->
   <div class="tabs" id="tabs"></div>
 
   <div class="container">
-    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna desta aba...">
+    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna da aba selecionada...">
 
     <div id="content">
-      <div class="loading">Selecione uma aba acima para carregar os dados</div>
+      <div class="loading">🔄 Detectando abas da planilha...</div>
     </div>
   </div>
 
@@ -131,37 +134,54 @@
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
 
-    // === LISTA DE ABAS (GIDs conhecidos) ===
-    // Adicione aqui novas abas quando quiser. O nome pode ser qualquer coisa.
-    let abas = [
-      { gid: "894202913", nome: "GeradorManut" },
-      // Exemplo de como adicionar mais abas:
-      // { gid: "123456789", nome: "Outra Aba" },
-      // { gid: "987654321", nome: "Base Ordinária" }
-    ];
+    let abasDetectadas = [];
 
-    // Criar botões das abas
-    function criarAbas() {
+    // Detecta todas as abas automaticamente usando o endpoint de metadados
+    async function detectarAbas() {
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const res = await fetch(url);
+        let texto = await res.text();
+        
+        texto = texto.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);?$/, '');
+        const data = JSON.parse(texto);
+
+        abasDetectadas = data.table.cols.map((col, index) => ({
+          gid: index,                    // índice funciona como gid em muitos casos
+          nome: col.label || `Aba ${index + 1}`
+        })).filter(aba => aba.nome && aba.nome.trim() !== "");
+
+        criarBotoesAbas();
+
+        // Carrega automaticamente a primeira aba
+        if (abasDetectadas.length > 0) {
+          carregarAba(abasDetectadas[0].gid, abasDetectadas[0].nome);
+        }
+      } catch (e) {
+        console.error(e);
+        content.innerHTML = `<div class="error">❌ Não foi possível detectar as abas.<br>Verifique se a planilha está com "Qualquer pessoa com o link pode visualizar".</div>`;
+      }
+    }
+
+    function criarBotoesAbas() {
       tabsContainer.innerHTML = '';
-      abas.forEach((aba, index) => {
+      abasDetectadas.forEach(aba => {
         const btn = document.createElement('button');
         btn.className = 'tab-button';
         btn.textContent = aba.nome;
         btn.onclick = () => carregarAba(aba.gid, aba.nome);
-        if (index === 0) btn.classList.add('active'); // primeira aba ativa
         tabsContainer.appendChild(btn);
       });
     }
 
     async function carregarAba(gid, nomeAba) {
-      content.innerHTML = `<div class="loading">🔄 Carregando aba: ${nomeAba}...</div>`;
+      content.innerHTML = `<div class="loading">🔄 Carregando: ${nomeAba}...</div>`;
 
       try {
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${gid}&tqx=out:csv`;
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Não foi possível acessar');
-
         const csvText = await res.text();
+
         const linhas = csvText.trim().split('\n').map(row => 
           row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim())
         );
@@ -187,7 +207,6 @@
             const header = (headers[i] || '').toLowerCase();
             let classe = '';
 
-            // Formata automaticamente qualquer coluna que tenha "valor" no nome
             if (header.includes('valor')) {
               classe = 'valor';
               const num = parseFloat(celula.replace(/[^0-9.,-]/g, '').replace(',', '.'));
@@ -204,35 +223,27 @@
         html += `</tbody></table></div>`;
         content.innerHTML = html;
 
-        // Atualiza aba ativa
+        // Ativa o botão da aba atual
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
         if (activeBtn) activeBtn.classList.add('active');
 
       } catch (err) {
-        console.error(err);
-        content.innerHTML = `<div class="error">❌ Erro ao carregar "${nomeAba}".<br>Verifique se a planilha está pública (Qualquer pessoa com o link → Visualizador).</div>`;
+        content.innerHTML = `<div class="error">❌ Erro ao carregar "${nomeAba}".<br>Tente novamente ou verifique o compartilhamento da planilha.</div>`;
       }
     }
 
-    // Filtro rápido
+    // Filtro em tempo real
     searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
       const linhas = document.querySelectorAll('#content tbody tr');
-
       linhas.forEach(linha => {
         linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
       });
     });
 
     // Iniciar
-    window.onload = () => {
-      criarAbas();
-      // Carrega automaticamente a primeira aba
-      if (abas.length > 0) {
-        carregarAba(abas[0].gid, abas[0].nome);
-      }
-    };
+    window.onload = detectarAbas;
   </script>
 </body>
 </html>
