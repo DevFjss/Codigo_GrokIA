@@ -3,113 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pesquisa CDF - TESTE NOTA</title>
+  <title>TESTE NOTA CDF - Pesquisa</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
+    
     body {
       font-family: 'Roboto', sans-serif;
       background: #f8f9fa;
-      color: #333;
       margin: 0;
-      padding: 0;
+      padding: 20px;
+      color: #333;
     }
-
     .header {
       background: linear-gradient(135deg, #00c853, #009624);
       color: white;
-      padding: 25px 0;
+      padding: 30px 0;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 0 0 15px 15px;
+      margin-bottom: 20px;
     }
+    .titulo { font-size: 2.6rem; font-weight: 700; margin: 0; }
 
-    .titulo {
-      font-size: 2.4rem;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .container {
-      max-width: 1300px;
-      margin: 25px auto;
-      padding: 0 15px;
-    }
+    .container { max-width: 1450px; margin: 0 auto; }
 
     #searchInput {
       width: 100%;
-      padding: 18px 22px;
-      font-size: 1.15rem;
-      border: 2px solid #ccc;
+      padding: 18px 25px;
+      font-size: 1.2rem;
+      border: 3px solid #ddd;
       border-radius: 50px;
       outline: none;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
-
     #searchInput:focus {
       border-color: #00c853;
-      box-shadow: 0 0 0 5px rgba(0, 200, 83, 0.2);
-    }
-
-    .info {
-      background: white;
-      padding: 12px 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      margin-bottom: 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
+      box-shadow: 0 0 0 5px rgba(0,200,83,0.25);
     }
 
     .sheet-container {
       background: white;
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 35px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      margin-bottom: 40px;
     }
-
     .sheet-title {
       background: #1e1e1e;
       color: white;
-      padding: 16px 20px;
-      font-size: 1.4rem;
-      font-weight: 500;
+      padding: 18px 25px;
+      font-size: 1.5rem;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: auto;
     }
-
     th {
       background: #f1f3f5;
-      padding: 14px 12px;
+      padding: 15px 12px;
       text-align: left;
       font-weight: 600;
-      border-bottom: 2px solid #ddd;
       position: sticky;
       top: 0;
       z-index: 10;
+      border-bottom: 2px solid #ddd;
     }
-
     td {
-      padding: 13px 12px;
+      padding: 14px 12px;
       border-bottom: 1px solid #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
     }
-
     tr:hover {
       background-color: #f0fff0;
     }
-
-    .loading, .no-results {
+    .loading, .error {
       text-align: center;
-      padding: 60px 20px;
-      font-size: 1.3rem;
+      padding: 80px 20px;
+      font-size: 1.4rem;
     }
-
-    .no-results { color: #666; }
+    .error { color: #d32f2f; }
   </style>
 </head>
 <body>
@@ -119,112 +94,94 @@
   </div>
 
   <div class="container">
-    <input type="text" id="searchInput" placeholder="🔍 Digite para filtrar em todas as abas e colunas...">
+    <input type="text" id="searchInput" placeholder="🔍 Pesquise por NTE, Município, Escola, Valor, Data...">
 
-    <div class="info">
-      <strong>Total de registros: <span id="total">0</span></strong>
-      <span id="status">Carregando planilha...</span>
+    <div id="content">
+      <div class="loading">🔄 Tentando carregar os dados da aba...</div>
     </div>
-
-    <div id="content"></div>
   </div>
 
   <script>
     const SPREADSHEET_ID = "17hskWwX1cJP6NDuctKgTP3O8ct4WM-xcFnxKYRrHMCY";
+    const GID = "894202913";
+
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
-    let totalRows = 0;
 
-    // Lista manual das abas mais comuns (você pode adicionar mais se souber os nomes)
-    const knownGids = [
-      { gid: 0, name: "Aba 1" },
-      { gid: 894202913, name: "Aba Principal (894202913)" }
-      // Adicione aqui outras gids se quiser: { gid: XXXXX, name: "Nome da Aba" }
-    ];
+    async function carregarDados() {
+      content.innerHTML = '<div class="loading">🔄 Carregando dados da planilha...</div>';
 
-    async function carregarPlanilha() {
-      content.innerHTML = '<div class="loading">🔄 Carregando todas as abas da planilha...</div>';
-
-      for (const sheet of knownGids) {
-        await carregarAba(sheet.gid, sheet.name);
-      }
-
-      document.getElementById('status').innerHTML = '✅ Planilha carregada com sucesso';
-    }
-
-    async function carregarAba(gid, nomeAba) {
       try {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json`;
-        const res = await fetch(url);
-        let texto = await res.text();
+        // Método 1: CSV Export (mais estável atualmente)
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
+        
+        const response = await fetch(csvUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }   // ajuda a evitar bloqueio
+        });
 
-        // Limpeza do JSON do Google
-        texto = texto.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);?$/, '');
-        const json = JSON.parse(texto);
+        if (!response.ok) throw new Error('Falha no carregamento');
 
-        if (!json.table || !json.table.rows || json.table.rows.length === 0) return;
+        const csvText = await response.text();
+        const rows = csvText.trim().split('\n').map(row => row.split(','));
 
-        const headers = json.table.cols.map(col => col.label || 'Coluna sem nome');
-        const rows = json.table.rows;
+        if (rows.length < 2) throw new Error('Dados vazios');
+
+        const headers = rows[0];
+        const dataRows = rows.slice(1);
 
         let html = `
           <div class="sheet-container">
-            <div class="sheet-title">${nomeAba} <small>(${rows.length} registros)</small></div>
+            <div class="sheet-title">Dados da Aba Principal — ${dataRows.length} registros</div>
             <table>
               <thead><tr>`;
         
-        headers.forEach(h => html += `<th>${h}</th>`);
+        headers.forEach(h => {
+          html += `<th>${h.replace(/"/g, '')}</th>`;
+        });
         
         html += `</tr></thead><tbody>`;
 
-        rows.forEach(row => {
+        dataRows.forEach(row => {
           html += `<tr>`;
-          row.c.forEach(cell => {
-            const valor = cell ? (cell.f || cell.v || '') : '';
-            html += `<td>${valor}</td>`;
+          row.forEach(cell => {
+            html += `<td>${cell.replace(/"/g, '')}</td>`;
           });
           html += `</tr>`;
-          totalRows++;
         });
 
         html += `</tbody></table></div>`;
 
-        content.innerHTML += html;
-        document.getElementById('total').textContent = totalRows;
+        content.innerHTML = html;
 
-      } catch (erro) {
-        console.error(`Erro na aba ${nomeAba} (gid=${gid})`, erro);
+      } catch (err) {
+        console.error(err);
+        content.innerHTML = `
+          <div class="error">
+            ❌ Não consegui carregar os dados.<br><br>
+            Possíveis causas:<br>
+            • Planilha ainda não está totalmente pública<br>
+            • Cache do navegador<br>
+            • Restrição temporária do Google<br><br>
+            <strong>Tente isto:</strong><br>
+            1. Abra a planilha novamente<br>
+            2. Compartilhar → confirme que está "Qualquer pessoa com o link → Visualizador"<br>
+            3. Pressione Ctrl + Shift + R (recarregar sem cache) nesta página
+          </div>`;
       }
     }
 
-    // Filtro em tempo real
+    // Filtro automático (ignora maiúsculas/minúsculas)
     searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
-      const containers = document.querySelectorAll('.sheet-container');
-      let encontrados = 0;
-
-      containers.forEach(container => {
-        const linhas = container.querySelectorAll('tbody tr');
-        let visiveis = 0;
-
-        linhas.forEach(linha => {
-          if (linha.textContent.toLowerCase().includes(termo)) {
-            linha.style.display = '';
-            visiveis++;
-            encontrados++;
-          } else {
-            linha.style.display = 'none';
-          }
-        });
-
-        container.style.display = (visiveis > 0 || termo === '') ? 'block' : 'none';
+      const linhas = document.querySelectorAll('tbody tr');
+      
+      linhas.forEach(linha => {
+        linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
       });
-
-      document.getElementById('total').textContent = termo === '' ? totalRows : encontrados;
     });
 
     // Iniciar carregamento
-    window.onload = carregarPlanilha;
+    window.onload = carregarDados;
   </script>
 </body>
 </html>
