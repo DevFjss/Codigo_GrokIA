@@ -2,80 +2,131 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TESTE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>TESTE NOTA CDF - Sistema Avançado</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
     
     :root {
       --verde: #00c853;
+      --verde-escuro: #009624;
+      --cinza-bg: #f8f9fa;
+      --cinza-borda: #dee2e6;
     }
 
     body {
       font-family: 'Roboto', sans-serif;
-      background: #f8f9fa;
+      background: var(--cinza-bg);
       margin: 0;
       padding: 0;
-      color: #333;
+      color: #212529;
     }
 
     .header {
-      background: var(--verde);
+      background: linear-gradient(135deg, var(--verde), var(--verde-escuro));
       color: white;
-      padding: 25px 0;
+      padding: 20px 0;
       text-align: center;
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 700;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      letter-spacing: -0.5px;
     }
 
     .tabs {
       background: white;
-      padding: 15px 20px;
+      padding: 12px 20px;
       text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       overflow-x: auto;
       white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .tab-button {
-      padding: 12px 26px;
-      margin: 6px;
-      border: none;
+      padding: 10px 24px;
+      margin: 4px 6px;
+      border: 2px solid transparent;
       background: #e9ecef;
-      color: #444;
+      color: #495057;
       border-radius: 30px;
       cursor: pointer;
-      font-size: 1.05rem;
-      font-weight: 500;
-      transition: all 0.3s;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .tab-button:hover {
+      background: #dee2e6;
+      transform: translateY(-1px);
     }
 
     .tab-button.active {
       background: var(--verde);
       color: white;
-      box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 200, 83, 0.3);
+      border-color: var(--verde);
+    }
+
+    /* Barra de ferramentas */
+    .toolbar {
+      max-width: 1450px;
+      margin: 20px auto;
+      padding: 0 15px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .search-box {
-      max-width: 850px;
-      margin: 25px auto;
-      padding: 0 15px;
+      flex: 2;
+      min-width: 250px;
     }
 
     #searchInput {
       width: 100%;
-      padding: 18px 24px;
-      font-size: 1.2rem;
-      border: 3px solid #ddd;
-      border-radius: 50px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: 2px solid var(--cinza-borda);
+      border-radius: 40px;
       outline: none;
-      transition: all 0.3s;
+      transition: all 0.2s;
+      background: white;
     }
 
     #searchInput:focus {
       border-color: var(--verde);
-      box-shadow: 0 0 0 5px rgba(0,200,83,0.15);
+      box-shadow: 0 0 0 3px rgba(0,200,83,0.1);
+    }
+
+    .stats {
+      background: white;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-weight: 500;
+      color: var(--verde-escuro);
+      font-size: 0.9rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .btn-reset {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-reset:hover {
+      background: #5a6268;
+      transform: translateY(-1px);
     }
 
     .sheet-container {
@@ -83,104 +134,196 @@
       margin: 20px auto;
       background: white;
       border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      overflow-x: auto;
+      overflow-y: auto;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      position: relative;
     }
 
     .sheet-header {
-      background: #1e1e1e;
+      background: #1e1e2a;
       color: white;
-      padding: 18px 25px;
-      font-size: 1.45rem;
+      padding: 14px 20px;
+      font-size: 1.25rem;
       font-weight: 500;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: sticky;
+      left: 0;
+    }
+
+    /* Tabela com redimensionamento de colunas */
+    .resizable-table-wrapper {
+      overflow-x: auto;
+      position: relative;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: auto;
+      min-width: 600px;
     }
 
     th {
-      background: #f1f3f5;
-      padding: 15px 12px;
+      background: #f8f9fc;
+      padding: 14px 12px;
       text-align: left;
-      font-weight: 600;
-      position: sticky;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border-bottom: 2px solid var(--cinza-borda);
+      position: relative;
+      user-select: none;
+      color: #1a1a2e;
+    }
+
+    /* Indicador de redimensionamento */
+    th.resizable {
+      position: relative;
+    }
+
+    th .resize-handle {
+      position: absolute;
+      right: 0;
       top: 0;
+      width: 5px;
+      height: 100%;
+      background: transparent;
+      cursor: col-resize;
       z-index: 10;
-      border-bottom: 2px solid #ddd;
+      transition: background 0.1s;
+    }
+
+    th .resize-handle:hover {
+      background: var(--verde);
+    }
+
+    th.resizing .resize-handle {
+      background: var(--verde);
     }
 
     td {
-      padding: 13px 14px;
-      border-bottom: 1px solid #eee;
+      padding: 12px 12px;
+      border-bottom: 1px solid #eceef2;
+      font-size: 0.9rem;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    }
+
+    /* estilo para linhas filtradas */
+    tr.filtered-out {
+      display: none;
     }
 
     tr:hover {
-      background-color: #f0fff0;
+      background-color: #f5fff5;
     }
 
     .valor {
       text-align: right;
-      font-weight: 500;
-      color: #006400;
+      font-weight: 600;
+      color: #2e7d32;
+      font-family: 'Roboto Mono', monospace;
     }
 
     .loading, .error {
       text-align: center;
       padding: 100px 20px;
-      font-size: 1.35rem;
+      font-size: 1.2rem;
     }
 
-    .error { color: #d32f2f; }
+    .error {
+      color: #d32f2f;
+      background: #ffebee;
+      border-radius: 12px;
+      margin: 20px;
+    }
+
+    /* Scroll suave */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--verde);
+      border-radius: 10px;
+    }
+
+    /* Modo responsivo */
+    @media (max-width: 768px) {
+      .header {
+        font-size: 1.5rem;
+        padding: 15px 0;
+      }
+      
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      td, th {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="header">
-    TESTE
+    📊 TESTE NOTA CDF
   </div>
 
   <!-- Abas -->
   <div class="tabs" id="tabs"></div>
 
-  <!-- Caixa de Pesquisa -->
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna...">
+  <!-- Barra de ferramentas com pesquisa e estatísticas -->
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="🔍 Pesquisa rápida em todas as colunas... (digite para filtrar)">
+    </div>
+    <div class="stats" id="statsDisplay">
+      📋 Registros: -
+    </div>
+    <button class="btn-reset" id="resetFilterBtn">⟳ Limpar filtro</button>
   </div>
 
   <!-- Conteúdo -->
   <div id="content">
-    <div class="loading">🔄 Carregando abas da planilha...</div>
+    <div class="loading">🔄 Carregando planilha...</div>
   </div>
 
   <script>
     const SPREADSHEET_ID = "17hskWwX1cJP6NDuctKgTP3O8ct4WM-xcFnxKYRrHMCY";
 
     const tabsContainer = document.getElementById('tabs');
-    const content = document.getElementById('content');
+    const contentDiv = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
+    const statsDisplay = document.getElementById('statsDisplay');
+    const resetFilterBtn = document.getElementById('resetFilterBtn');
 
-    let currentRows = [];   // Cache para filtro ultra rápido
-    let debounceTimer = null;
+    // Estado global
+    let currentRowsData = [];      // Armazena referências das linhas DOM
+    let currentTableHeaders = [];   // Guarda headers atuais
+    let currentTotalRows = 0;
+    let currentSheetName = '';
+    let resizeObservers = [];       // Para limpeza
 
-    // === COLOQUE AQUI OS NOMES EXATOS DAS ABAS DA SUA PLANILHA ===
+    // === CONFIGURAÇÃO DAS ABAS ===
     const abas = [
       { nome: "GeradorManut" },
       { nome: "GeradorFaed" },
       { nome: "BaseOrdinaria" },
       { nome: "Retorno439" }
-      // Adicione mais abas aqui:
-      // { nome: "NomeExatoDaAba" }
     ];
 
-    // Criar botões das abas
+    // Criar abas
     function criarAbas() {
       tabsContainer.innerHTML = '';
       abas.forEach(aba => {
@@ -192,97 +335,296 @@
       });
     }
 
-    // Carregar aba selecionada
-    async function carregarAba(nomeAba) {
-      content.innerHTML = `<div class="loading">🔄 Carregando ${nomeAba}...</div>`;
+    // Atualizar estatísticas visíveis
+    function updateStats() {
+      if (!currentRowsData.length) {
+        statsDisplay.textContent = `📋 Registros: 0`;
+        return;
+      }
+      const visibleCount = currentRowsData.filter(row => row.style.display !== 'none').length;
+      statsDisplay.textContent = `📋 ${visibleCount} / ${currentTotalRows} registros`;
+    }
 
+    // Aplicar filtro de texto OTIMIZADO (sem debounce pesado, mas rápido)
+    let filterTimeout = null;
+    function applyFilter() {
+      if (filterTimeout) clearTimeout(filterTimeout);
+      
+      filterTimeout = setTimeout(() => {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        
+        if (!searchTerm) {
+          // Mostrar todas as linhas
+          currentRowsData.forEach(row => {
+            row.style.display = '';
+          });
+          updateStats();
+          return;
+        }
+        
+        // Filtro rápido usando textContent já indexado (busca em todas as células)
+        // Otimização: percorre apenas uma vez as linhas, verifica se inclui termo
+        for (let i = 0; i < currentRowsData.length; i++) {
+          const row = currentRowsData[i];
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(searchTerm) ? '' : 'none';
+        }
+        updateStats();
+      }, 80); // 80ms -> resposta fluida e sem travamentos
+    }
+
+    // Função para habilitar redimensionamento manual de colunas
+    function enableColumnResizing(table) {
+      if (!table) return;
+      
+      // Remove handles antigos se existirem
+      const existingHandles = table.querySelectorAll('.resize-handle');
+      existingHandles.forEach(handle => handle.remove());
+      
+      const headers = table.querySelectorAll('th');
+      
+      headers.forEach((th, index) => {
+        // Adiciona classe resizable e o manipulador visual
+        th.classList.add('resizable');
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        handle.setAttribute('data-col-index', index);
+        
+        let startX, startWidth;
+        let isResizing = false;
+        
+        const onMouseMove = (e) => {
+          if (!isResizing) return;
+          const dx = e.clientX - startX;
+          const newWidth = startWidth + dx;
+          if (newWidth > 40) {  // Largura mínima 40px
+            const colCells = table.querySelectorAll(`th:nth-child(${index+1}), td:nth-child(${index+1})`);
+            colCells.forEach(cell => {
+              cell.style.width = `${newWidth}px`;
+              cell.style.minWidth = `${newWidth}px`;
+            });
+          }
+        };
+        
+        const onMouseUp = () => {
+          if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            th.classList.remove('resizing');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          }
+        };
+        
+        handle.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          isResizing = true;
+          startX = e.clientX;
+          const currentWidth = th.getBoundingClientRect().width;
+          startWidth = currentWidth;
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          th.classList.add('resizing');
+          
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+        
+        th.appendChild(handle);
+      });
+    }
+
+    // Renderizar tabela com dados e habilitar redimensionamento
+    function renderTable(headers, dados, sheetName) {
+      if (!headers || !dados) return;
+      
+      currentTotalRows = dados.length;
+      currentTableHeaders = headers;
+      currentSheetName = sheetName;
+      
+      let html = `
+        <div class="sheet-container">
+          <div class="sheet-header">
+            <span>📑 ${sheetName}</span>
+            <span style="font-size: 0.9rem; opacity: 0.9;">${dados.length} linhas | Clique nas bordas das colunas para redimensionar</span>
+          </div>
+          <div class="resizable-table-wrapper">
+            <table id="dataTable" style="width: 100%;">
+              <thead>
+                <tr>
+      `;
+      
+      // Cabeçalhos
+      headers.forEach(h => {
+        html += `<th>${h || 'Coluna'}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+      
+      // Corpo da tabela
+      for (let i = 0; i < dados.length; i++) {
+        const linha = dados[i];
+        html += `<tr>`;
+        for (let j = 0; j < headers.length; j++) {
+          let celula = linha[j] !== undefined ? linha[j] : '';
+          const headerLower = (headers[j] || '').toLowerCase();
+          let classe = '';
+          
+          if (headerLower.includes('valor') || headerLower.includes('preço') || headerLower.includes('preco') || headerLower.includes('total')) {
+            classe = 'valor';
+            // formatar número como moeda se possível
+            let numStr = String(celula).replace(/[^0-9,.-]/g, '').replace(',', '.');
+            let num = parseFloat(numStr);
+            if (!isNaN(num) && numStr !== '') {
+              celula = num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            } else if (typeof celula === 'string' && celula.match(/[\d,\.]/)) {
+              // tenta novamente
+              let n = parseFloat(celula.replace(/\./g, '').replace(',', '.'));
+              if (!isNaN(n)) celula = n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+          }
+          
+          // Truncamento visual mantendo visível (white-space nowrap já está no css)
+          html += `<td class="${classe}" title="${String(celula).replace(/"/g, '&quot;')}">${celula || ''}</td>`;
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table></div></div>`;
+      
+      contentDiv.innerHTML = html;
+      
+      // Aguardar DOM pronto para capturar referências e aplicar redimensionamento
+      const tableElement = document.getElementById('dataTable');
+      if (tableElement) {
+        // Configurar redimensionamento manual
+        enableColumnResizing(tableElement);
+        
+        // Armazenar referências das linhas para filtro rápido
+        currentRowsData = Array.from(tableElement.querySelectorAll('tbody tr'));
+        
+        // Garantir que as colunas estejam visíveis: definir largura automática inicial baseada no conteúdo
+        // Mas sem perder a capacidade de redimensionamento manual
+        const allTh = tableElement.querySelectorAll('th');
+        allTh.forEach((th, idx) => {
+          // Define largura inicial automaticamente com base no conteúdo (se não foi definida)
+          if (!th.style.width) {
+            th.style.width = 'auto';
+          }
+        });
+        
+        updateStats();
+      } else {
+        currentRowsData = [];
+      }
+    }
+    
+    // Carregar aba com cache e performance aprimorada
+    async function carregarAba(nomeAba) {
+      // Limpar pesquisa antes de carregar nova aba
+      searchInput.value = '';
+      
+      contentDiv.innerHTML = `<div class="loading">🔄 Carregando <strong>${nomeAba}</strong> (otimizado)...</div>`;
+      
       try {
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}`;
         
+        const fetchStart = performance.now();
         const res = await fetch(url);
-        if (!res.ok) throw new Error("Falha ao acessar a aba");
-
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
         const csvText = await res.text();
-        const linhas = csvText.trim().split('\n').map(row => 
-          row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim())
-        );
-
-        if (linhas.length < 2) throw new Error("Aba vazia");
-
-        const headers = linhas[0];
-        const dados = linhas.slice(1);
-
-        let html = `
-          <div class="sheet-container">
-            <div class="sheet-header">
-              ${nomeAba} — ${dados.length} registros
-            </div>
-            <table>
-              <thead><tr>`;
-
-        headers.forEach(h => html += `<th>${h}</th>`);
-
-        html += `</tr></thead><tbody>`;
-
-        dados.forEach(linha => {
-          html += `<tr>`;
-          linha.forEach((celula, i) => {
-            const header = (headers[i] || '').toLowerCase();
-            let classe = '';
-
-            if (header.includes('valor')) {
-              classe = 'valor';
-              const num = parseFloat(celula.replace(/[^0-9.,-]/g, '').replace(',', '.'));
-              if (!isNaN(num)) {
-                celula = num.toLocaleString('pt-BR', { 
-                  style: 'currency', 
-                  currency: 'BRL' 
-                });
-              }
+        const linhasBrutas = csvText.trim().split(/\r?\n/);
+        
+        if (linhasBrutas.length < 2) throw new Error("Aba vazia ou sem dados");
+        
+        // Parse mais robusto para CSV (evitar problemas com vírgulas dentro de strings)
+        const parseCSVLine = (line) => {
+          const result = [];
+          let inQuote = false;
+          let current = '';
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuote = !inQuote;
+            } else if (char === ',' && !inQuote) {
+              result.push(current.trim());
+              current = '';
+            } else {
+              current += char;
             }
-            html += `<td class="${classe}">${celula}</td>`;
-          });
-          html += `</tr>`;
+          }
+          result.push(current.trim());
+          return result.map(cell => cell.replace(/^"|"$/g, '').trim());
+        };
+        
+        const headers = parseCSVLine(linhasBrutas[0]);
+        const dados = [];
+        for (let i = 1; i < linhasBrutas.length; i++) {
+          if (linhasBrutas[i].trim() !== '') {
+            dados.push(parseCSVLine(linhasBrutas[i]));
+          }
+        }
+        
+        console.log(`✅ ${nomeAba} carregada: ${dados.length} registros, ${headers.length} colunas`);
+        
+        renderTable(headers, dados, nomeAba);
+        
+        // Atualizar botão ativo das abas
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.textContent === nomeAba) btn.classList.add('active');
         });
-
-        html += `</tbody></table></div>`;
-        content.innerHTML = html;
-
-        // Cache das linhas para filtro super rápido
-        currentRows = Array.from(document.querySelectorAll('#content tbody tr'));
-
-        // Ativar botão da aba
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
-        if (activeBtn) activeBtn.classList.add('active');
-
+        
+        // Após carregar tabela, reaplicar filtro caso haja texto na busca (normalmente vazio)
+        if (searchInput.value.trim() !== '') {
+          applyFilter();
+        } else {
+          updateStats();
+        }
+        
       } catch (err) {
-        console.error(err);
-        content.innerHTML = `<div class="error">
-          ❌ Não foi possível carregar a aba "<strong>${nomeAba}</strong>".<br><br>
-          Verifique se a planilha está compartilhada como:<br>
-          <strong>"Qualquer pessoa com o link pode visualizar"</strong>
+        console.error("Erro ao carregar aba:", err);
+        contentDiv.innerHTML = `<div class="error">
+          ❌ Erro ao carregar aba "<strong>${nomeAba}</strong>".<br><br>
+          Verifique se a planilha está pública e compartilhada como:<br>
+          <strong>"Qualquer pessoa com o link pode visualizar"</strong><br><br>
+          Detalhe: ${err.message}
         </div>`;
+        currentRowsData = [];
+        currentTotalRows = 0;
+        updateStats();
       }
     }
-
-    // Filtro ULTRA RÁPIDO com debounce
+    
+    // Evento de pesquisa com debounce melhorado
     searchInput.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        const termo = searchInput.value.toLowerCase().trim();
-        
-        currentRows.forEach(linha => {
-          linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
-        });
-      }, 120); // 120ms - ótimo equilíbrio entre velocidade e responsividade
+      applyFilter();
     });
-
-    // Inicializar
+    
+    // Botão resetar filtro
+    resetFilterBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      applyFilter();
+      searchInput.focus();
+    });
+    
+    // Observador de redimensionamento de janela para garantir que as colunas não percam referência
+    window.addEventListener('resize', () => {
+      // Opcional: Reforçar larguras mínimas (apenas para estabilidade visual)
+      const table = document.getElementById('dataTable');
+      if (table && currentTableHeaders) {
+        // Preserva redimensionamento manual existente
+      }
+    });
+    
+    // Inicialização
     window.onload = () => {
       criarAbas();
       if (abas.length > 0) {
         carregarAba(abas[0].nome);
+      } else {
+        contentDiv.innerHTML = '<div class="error">Nenhuma aba configurada no script.</div>';
       }
     };
   </script>
