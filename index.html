@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TESTE NOTA CDF - Pesquisa</title>
+  <title>TESTE NOTA CDF</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
     
@@ -17,36 +17,32 @@
     .header {
       background: linear-gradient(135deg, #00c853, #009624);
       color: white;
-      padding: 25px 0;
+      padding: 30px 0;
       text-align: center;
     }
-    .titulo { font-size: 2.5rem; font-weight: 700; margin: 0; }
+    .titulo { font-size: 2.6rem; font-weight: 700; margin: 0; }
 
     .tabs {
       background: white;
-      padding: 15px 20px;
+      padding: 15px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
-      overflow-x: auto;
     }
     .tab-button {
-      padding: 12px 22px;
+      padding: 12px 24px;
       border: none;
       background: #e0e0e0;
       color: #333;
       border-radius: 30px;
       cursor: pointer;
-      font-weight: 500;
-      white-space: nowrap;
-      transition: all 0.3s;
+      font-size: 1.05rem;
     }
     .tab-button.active {
       background: #00c853;
       color: white;
-      box-shadow: 0 4px 12px rgba(0,200,83,0.3);
     }
 
     .container { max-width: 1450px; margin: 20px auto; padding: 0 15px; }
@@ -77,15 +73,11 @@
       padding: 18px 25px;
       font-size: 1.5rem;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    table { width: 100%; border-collapse: collapse; }
     th {
       background: #f1f3f5;
       padding: 15px 12px;
       text-align: left;
-      font-weight: 600;
       position: sticky;
       top: 0;
       z-index: 10;
@@ -94,9 +86,7 @@
       padding: 13px 12px;
       border-bottom: 1px solid #eee;
     }
-    tr:hover {
-      background-color: #f0fff0;
-    }
+    tr:hover { background-color: #f0fff0; }
     .valor {
       text-align: right;
       font-weight: 500;
@@ -104,7 +94,7 @@
     }
     .loading, .error {
       text-align: center;
-      padding: 80px 20px;
+      padding: 100px 20px;
       font-size: 1.4rem;
     }
     .error { color: #d32f2f; }
@@ -116,11 +106,10 @@
     <h1 class="titulo">TESTE NOTA CDF</h1>
   </div>
 
-  <!-- Abas detectadas automaticamente -->
   <div class="tabs" id="tabs"></div>
 
   <div class="container">
-    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna da aba selecionada...">
+    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna...">
 
     <div id="content">
       <div class="loading">🔄 Detectando abas da planilha...</div>
@@ -129,59 +118,41 @@
 
   <script>
     const SPREADSHEET_ID = "17hskWwX1cJP6NDuctKgTP3O8ct4WM-xcFnxKYRrHMCY";
-    
+
     const tabsContainer = document.getElementById('tabs');
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
 
-    let abasDetectadas = [];
+    // === Coloque aqui os nomes exatos das abas da sua planilha ===
+    const abas = [
+      { nome: "GeradorManut", gid: "894202913" },
+      // Adicione as outras abas aqui (substitua "NomeDaAba" pelo nome real):
+      // { nome: "GeradorFaed", gid: "OUTRO_GID" },
+      // { nome: "BaseOrdinaria", gid: "OUTRO_GID" },
+    ];
 
-    // Detecta todas as abas automaticamente usando o endpoint de metadados
-    async function detectarAbas() {
-      try {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        const res = await fetch(url);
-        let texto = await res.text();
-        
-        texto = texto.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);?$/, '');
-        const data = JSON.parse(texto);
-
-        abasDetectadas = data.table.cols.map((col, index) => ({
-          gid: index,                    // índice funciona como gid em muitos casos
-          nome: col.label || `Aba ${index + 1}`
-        })).filter(aba => aba.nome && aba.nome.trim() !== "");
-
-        criarBotoesAbas();
-
-        // Carrega automaticamente a primeira aba
-        if (abasDetectadas.length > 0) {
-          carregarAba(abasDetectadas[0].gid, abasDetectadas[0].nome);
-        }
-      } catch (e) {
-        console.error(e);
-        content.innerHTML = `<div class="error">❌ Não foi possível detectar as abas.<br>Verifique se a planilha está com "Qualquer pessoa com o link pode visualizar".</div>`;
-      }
-    }
-
-    function criarBotoesAbas() {
+    function criarAbas() {
       tabsContainer.innerHTML = '';
-      abasDetectadas.forEach(aba => {
+      abas.forEach(aba => {
         const btn = document.createElement('button');
         btn.className = 'tab-button';
         btn.textContent = aba.nome;
-        btn.onclick = () => carregarAba(aba.gid, aba.nome);
+        btn.onclick = () => carregarAba(aba.nome);
         tabsContainer.appendChild(btn);
       });
     }
 
-    async function carregarAba(gid, nomeAba) {
-      content.innerHTML = `<div class="loading">🔄 Carregando: ${nomeAba}...</div>`;
+    async function carregarAba(nomeAba) {
+      content.innerHTML = `<div class="loading">🔄 Carregando aba: ${nomeAba}...</div>`;
 
       try {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${gid}&tqx=out:csv`;
-        const res = await fetch(url);
-        const csvText = await res.text();
+        // Método mais estável atualmente
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}`;
 
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Falha ao acessar');
+
+        const csvText = await res.text();
         const linhas = csvText.trim().split('\n').map(row => 
           row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim())
         );
@@ -214,7 +185,6 @@
                 celula = num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
               }
             }
-
             html += `<td class="${classe}">${celula}</td>`;
           });
           html += `</tr>`;
@@ -223,17 +193,22 @@
         html += `</tbody></table></div>`;
         content.innerHTML = html;
 
-        // Ativa o botão da aba atual
+        // Ativa o botão
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
-        if (activeBtn) activeBtn.classList.add('active');
+        const active = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
+        if (active) active.classList.add('active');
 
       } catch (err) {
-        content.innerHTML = `<div class="error">❌ Erro ao carregar "${nomeAba}".<br>Tente novamente ou verifique o compartilhamento da planilha.</div>`;
+        console.error(err);
+        content.innerHTML = `<div class="error">
+          ❌ Não conseguiu carregar a aba "${nomeAba}".<br><br>
+          Certifique-se que a planilha está compartilhada como:<br>
+          <strong>"Qualquer pessoa com o link pode visualizar"</strong>
+        </div>`;
       }
     }
 
-    // Filtro em tempo real
+    // Filtro
     searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
       const linhas = document.querySelectorAll('#content tbody tr');
@@ -243,7 +218,10 @@
     });
 
     // Iniciar
-    window.onload = detectarAbas;
+    window.onload = () => {
+      criarAbas();
+      if (abas.length > 0) carregarAba(abas[0].nome);   // carrega primeira aba
+    };
   </script>
 </body>
 </html>
