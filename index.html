@@ -11,19 +11,42 @@
       font-family: 'Roboto', sans-serif;
       background: #f8f9fa;
       margin: 0;
-      padding: 15px;
+      padding: 0;
       color: #333;
     }
     .header {
       background: linear-gradient(135deg, #00c853, #009624);
       color: white;
-      padding: 30px 0;
+      padding: 25px 0;
       text-align: center;
-      border-radius: 0 0 15px 15px;
     }
-    .titulo { font-size: 2.6rem; font-weight: 700; margin: 0; }
+    .titulo { font-size: 2.5rem; font-weight: 700; margin: 0; }
 
-    .container { max-width: 1450px; margin: 25px auto; }
+    .tabs {
+      background: white;
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .tab-button {
+      padding: 10px 20px;
+      border: none;
+      background: #e0e0e0;
+      color: #333;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    .tab-button.active {
+      background: #00c853;
+      color: white;
+    }
+
+    .container { max-width: 1450px; margin: 20px auto; padding: 0 15px; }
 
     #searchInput {
       width: 100%;
@@ -36,7 +59,7 @@
     }
     #searchInput:focus {
       border-color: #00c853;
-      box-shadow: 0 0 0 5px rgba(0,200,83,0.25);
+      box-shadow: 0 0 0 5px rgba(0,200,83,0.2);
     }
 
     .sheet-container {
@@ -44,7 +67,6 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-      margin-bottom: 40px;
     }
     .sheet-title {
       background: #1e1e1e;
@@ -79,7 +101,7 @@
     }
     .loading, .error {
       text-align: center;
-      padding: 100px 20px;
+      padding: 80px;
       font-size: 1.4rem;
     }
     .error { color: #d32f2f; }
@@ -91,71 +113,86 @@
     <h1 class="titulo">TESTE</h1>
   </div>
 
+  <!-- Abas (Tabs) -->
+  <div class="tabs" id="tabs"></div>
+
   <div class="container">
-    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna...">
+    <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna desta aba...">
 
     <div id="content">
-      <div class="loading">🔄 Tentando carregar a aba principal...</div>
+      <div class="loading">Selecione uma aba acima para carregar os dados</div>
     </div>
   </div>
 
   <script>
     const SPREADSHEET_ID = "17hskWwX1cJP6NDuctKgTP3O8ct4WM-xcFnxKYRrHMCY";
-    const GID = "894202913";
-
+    
+    const tabsContainer = document.getElementById('tabs');
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
 
-    async function carregarDados() {
-      content.innerHTML = '<div class="loading">🔄 Carregando dados...</div>';
+    // === LISTA DE ABAS (GIDs conhecidos) ===
+    // Adicione aqui novas abas quando quiser. O nome pode ser qualquer coisa.
+    let abas = [
+      { gid: "894202913", nome: "GeradorManut" },
+      // Exemplo de como adicionar mais abas:
+      // { gid: "123456789", nome: "Outra Aba" },
+      // { gid: "987654321", nome: "Base Ordinária" }
+    ];
+
+    // Criar botões das abas
+    function criarAbas() {
+      tabsContainer.innerHTML = '';
+      abas.forEach((aba, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-button';
+        btn.textContent = aba.nome;
+        btn.onclick = () => carregarAba(aba.gid, aba.nome);
+        if (index === 0) btn.classList.add('active'); // primeira aba ativa
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    async function carregarAba(gid, nomeAba) {
+      content.innerHTML = `<div class="loading">🔄 Carregando aba: ${nomeAba}...</div>`;
 
       try {
-        // Método mais estável em 2026: gviz com tqx=out:csv
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID}&tqx=out:csv`;
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${gid}&tqx=out:csv`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Não foi possível acessar');
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Falha na resposta');
+        const csvText = await res.text();
+        const linhas = csvText.trim().split('\n').map(row => 
+          row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim())
+        );
 
-        const csvText = await response.text();
-        
-        // Parse simples do CSV
-        const linhas = csvText.trim().split('\n').map(row => {
-          return row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
-        });
-
-        if (linhas.length < 2) throw new Error('Dados vazios');
+        if (linhas.length < 2) throw new Error('Aba vazia');
 
         const headers = linhas[0];
         const dados = linhas.slice(1);
 
         let html = `
           <div class="sheet-container">
-            <div class="sheet-title">Aba Principal — ${dados.length} registros</div>
+            <div class="sheet-title">${nomeAba} — ${dados.length} registros</div>
             <table>
               <thead><tr>`;
 
-        headers.forEach(h => {
-          html += `<th>${h}</th>`;
-        });
+        headers.forEach(h => html += `<th>${h}</th>`);
 
         html += `</tr></thead><tbody>`;
 
         dados.forEach(linha => {
           html += `<tr>`;
-          linha.forEach((celula, index) => {
-            const headerName = headers[index] ? headers[index].toLowerCase() : '';
+          linha.forEach((celula, i) => {
+            const header = (headers[i] || '').toLowerCase();
             let classe = '';
 
-            // Formata automaticamente colunas que têm "valor" no nome
-            if (headerName.includes('valor')) {
+            // Formata automaticamente qualquer coluna que tenha "valor" no nome
+            if (header.includes('valor')) {
               classe = 'valor';
               const num = parseFloat(celula.replace(/[^0-9.,-]/g, '').replace(',', '.'));
               if (!isNaN(num)) {
-                celula = num.toLocaleString('pt-BR', { 
-                  style: 'currency', 
-                  currency: 'BRL',
-                  minimumFractionDigits: 2 
-                });
+                celula = num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
               }
             }
 
@@ -167,24 +204,21 @@
         html += `</tbody></table></div>`;
         content.innerHTML = html;
 
+        // Atualiza aba ativa
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
+        if (activeBtn) activeBtn.classList.add('active');
+
       } catch (err) {
         console.error(err);
-        content.innerHTML = `
-          <div class="error">
-            ❌ Não foi possível carregar os dados.<br><br>
-            <strong>O que fazer agora:</strong><br>
-            1. Abra sua planilha<br>
-            2. Clique em <strong>Compartilhar</strong> → confirme que está "<strong>Qualquer pessoa com o link pode visualizar</strong>"<br>
-            3. Pressione <strong>Ctrl + Shift + R</strong> aqui nesta página (recarregar sem cache)<br><br>
-            Se ainda não funcionar, me envie a mensagem que aparece no Console (pressione F12 → aba Console).
-          </div>`;
+        content.innerHTML = `<div class="error">❌ Erro ao carregar "${nomeAba}".<br>Verifique se a planilha está pública (Qualquer pessoa com o link → Visualizador).</div>`;
       }
     }
 
     // Filtro rápido
     searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
-      const linhas = document.querySelectorAll('tbody tr');
+      const linhas = document.querySelectorAll('#content tbody tr');
 
       linhas.forEach(linha => {
         linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
@@ -192,7 +226,13 @@
     });
 
     // Iniciar
-    window.onload = carregarDados;
+    window.onload = () => {
+      criarAbas();
+      // Carrega automaticamente a primeira aba
+      if (abas.length > 0) {
+        carregarAba(abas[0].gid, abas[0].nome);
+      }
+    };
   </script>
 </body>
 </html>
