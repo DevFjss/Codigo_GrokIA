@@ -7,100 +7,74 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-    :root {
-      --verde: #00c853;
-      --cinza-escuro: #1e1e1e;
-      --cinza: #424242;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
     body {
       font-family: 'Roboto', sans-serif;
       background: #f8f9fa;
       color: #333;
-      line-height: 1.6;
+      margin: 0;
+      padding: 0;
     }
 
     .header {
-      background: linear-gradient(135deg, #00c853, #00b140);
+      background: linear-gradient(135deg, #00c853, #009624);
       color: white;
-      padding: 20px 0;
+      padding: 25px 0;
       text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .titulo {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 700;
-    }
-
-    .subtitulo {
-      font-size: 1.1rem;
-      opacity: 0.95;
-      margin-top: 5px;
+      margin: 0;
     }
 
     .container {
-      max-width: 1200px;
-      margin: 20px auto;
+      max-width: 1300px;
+      margin: 25px auto;
       padding: 0 15px;
-    }
-
-    .search-box {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-      margin-bottom: 25px;
     }
 
     #searchInput {
       width: 100%;
-      padding: 16px 20px;
-      font-size: 1.1rem;
-      border: 2px solid #ddd;
+      padding: 18px 22px;
+      font-size: 1.15rem;
+      border: 2px solid #ccc;
       border-radius: 50px;
       outline: none;
-      transition: all 0.3s;
+      margin-bottom: 20px;
     }
 
     #searchInput:focus {
-      border-color: var(--verde);
-      box-shadow: 0 0 0 4px rgba(0, 200, 83, 0.15);
+      border-color: #00c853;
+      box-shadow: 0 0 0 5px rgba(0, 200, 83, 0.2);
     }
 
-    .info-bar {
+    .info {
       background: white;
       padding: 12px 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .stats {
-      font-weight: 500;
-      color: #333;
     }
 
     .sheet-container {
       background: white;
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      margin-bottom: 35px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
 
-    .sheet-header {
-      background: var(--cinza-escuro);
+    .sheet-title {
+      background: #1e1e1e;
       color: white;
       padding: 16px 20px;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: 500;
     }
 
@@ -110,8 +84,7 @@
     }
 
     th {
-      background: #f1f1f1;
-      color: #333;
+      background: #f1f3f5;
       padding: 14px 12px;
       text-align: left;
       font-weight: 600;
@@ -122,128 +95,86 @@
     }
 
     td {
-      padding: 12px 14px;
+      padding: 13px 12px;
       border-bottom: 1px solid #eee;
-      font-size: 0.98rem;
     }
 
     tr:hover {
-      background-color: #f9fff9;
+      background-color: #f0fff0;
     }
 
-    .no-results {
+    .loading, .no-results {
       text-align: center;
       padding: 60px 20px;
-      color: #666;
-      font-size: 1.2rem;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 50px;
-      color: var(--verde);
       font-size: 1.3rem;
     }
 
-    .footer {
-      text-align: center;
-      margin-top: 40px;
-      color: #777;
-      font-size: 0.9rem;
-    }
+    .no-results { color: #666; }
   </style>
 </head>
 <body>
 
   <div class="header">
     <h1 class="titulo">TESTE NOTA CDF</h1>
-    <p class="subtitulo">Pesquisa com filtro automático - Google Sheets</p>
   </div>
 
   <div class="container">
+    <input type="text" id="searchInput" placeholder="🔍 Digite para filtrar em todas as abas e colunas...">
 
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="🔍 Pesquise em todas as colunas... (ignora maiúsculas/minúsculas)" autocomplete="off">
+    <div class="info">
+      <strong>Total de registros: <span id="total">0</span></strong>
+      <span id="status">Carregando planilha...</span>
     </div>
 
-    <div class="info-bar">
-      <div class="stats">
-        <strong id="totalRegistros">0</strong> registros encontrados
-      </div>
-      <div id="status">Carregando dados da Google Sheets...</div>
-    </div>
-
-    <div id="content">
-      <!-- Tabelas serão inseridas aqui -->
-    </div>
-
-    <div class="footer">
-      Dados carregados automaticamente da Google Sheets • Atualização em tempo real
-    </div>
+    <div id="content"></div>
   </div>
 
   <script>
     const SPREADSHEET_ID = "17hskWwX1cJP6NDuctKgTP3O8ct4WM-xcFnxKYRrHMCY";
-    const contentDiv = document.getElementById('content');
+    const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
-    let totalRegistros = 0;
+    let totalRows = 0;
 
-    async function loadAllSheets() {
-      contentDiv.innerHTML = '<div class="loading">🔄 Carregando dados da planilha...</div>';
+    // Lista manual das abas mais comuns (você pode adicionar mais se souber os nomes)
+    const knownGids = [
+      { gid: 0, name: "Aba 1" },
+      { gid: 894202913, name: "Aba Principal (894202913)" }
+      // Adicione aqui outras gids se quiser: { gid: XXXXX, name: "Nome da Aba" }
+    ];
 
-      try {
-        // Carrega metadados para pegar todas as abas
-        const metaUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        const metaRes = await fetch(metaUrl);
-        let metaText = await metaRes.text();
-        metaText = metaText.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);$/, '');
-        const metaData = JSON.parse(metaText);
+    async function carregarPlanilha() {
+      content.innerHTML = '<div class="loading">🔄 Carregando todas as abas da planilha...</div>';
 
-        const sheets = [];
-        // Extrai nomes das abas
-        if (metaData.table && metaData.table.cols) {
-          metaData.table.cols.forEach((col, i) => {
-            if (col.label) sheets.push({ title: col.label, gid: i });
-          });
-        }
-
-        contentDiv.innerHTML = '';
-
-        for (const sheet of sheets) {
-          await loadSheet(sheet.title, sheet.gid);
-        }
-
-        document.getElementById('status').innerHTML = `✅ Dados carregados com sucesso`;
-        
-      } catch (err) {
-        console.error(err);
-        contentDiv.innerHTML = `<div class="no-results">❌ Erro ao carregar a planilha.<br>Verifique se ela está pública (Qualquer pessoa com o link pode visualizar).</div>`;
+      for (const sheet of knownGids) {
+        await carregarAba(sheet.gid, sheet.name);
       }
+
+      document.getElementById('status').innerHTML = '✅ Planilha carregada com sucesso';
     }
 
-    async function loadSheet(sheetName, gid) {
+    async function carregarAba(gid, nomeAba) {
       try {
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json`;
         const res = await fetch(url);
-        let text = await res.text();
-        text = text.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);$/, '');
-        const json = JSON.parse(text);
+        let texto = await res.text();
 
-        const headers = json.table.cols.map(c => c.label || `Coluna ${headers.length + 1}`);
+        // Limpeza do JSON do Google
+        texto = texto.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);?$/, '');
+        const json = JSON.parse(texto);
+
+        if (!json.table || !json.table.rows || json.table.rows.length === 0) return;
+
+        const headers = json.table.cols.map(col => col.label || 'Coluna sem nome');
         const rows = json.table.rows;
-
-        if (rows.length === 0) return;
 
         let html = `
           <div class="sheet-container">
-            <div class="sheet-header">${sheetName} <span style="font-size:0.9rem; opacity:0.8;">(${rows.length} registros)</span></div>
+            <div class="sheet-title">${nomeAba} <small>(${rows.length} registros)</small></div>
             <table>
               <thead><tr>`;
-
-        headers.forEach(h => {
-          html += `<th>${h}</th>`;
-        });
-
+        
+        headers.forEach(h => html += `<th>${h}</th>`);
+        
         html += `</tr></thead><tbody>`;
 
         rows.forEach(row => {
@@ -253,56 +184,47 @@
             html += `<td>${valor}</td>`;
           });
           html += `</tr>`;
-          totalRegistros++;
+          totalRows++;
         });
 
         html += `</tbody></table></div>`;
-        
-        contentDiv.innerHTML += html;
 
-        // Atualiza contador
-        document.getElementById('totalRegistros').textContent = totalRegistros;
+        content.innerHTML += html;
+        document.getElementById('total').textContent = totalRows;
 
-      } catch (e) {
-        console.error(`Erro na aba ${sheetName}:`, e);
+      } catch (erro) {
+        console.error(`Erro na aba ${nomeAba} (gid=${gid})`, erro);
       }
     }
 
     // Filtro em tempo real
-    function filtrarTabelas() {
+    searchInput.addEventListener('input', () => {
       const termo = searchInput.value.toLowerCase().trim();
-      const tables = document.querySelectorAll('.sheet-container table');
+      const containers = document.querySelectorAll('.sheet-container');
       let encontrados = 0;
 
-      tables.forEach(table => {
-        const rows = table.querySelectorAll('tbody tr');
+      containers.forEach(container => {
+        const linhas = container.querySelectorAll('tbody tr');
         let visiveis = 0;
 
-        rows.forEach(row => {
-          const texto = row.textContent.toLowerCase();
-          if (texto.includes(termo)) {
-            row.style.display = '';
+        linhas.forEach(linha => {
+          if (linha.textContent.toLowerCase().includes(termo)) {
+            linha.style.display = '';
             visiveis++;
             encontrados++;
           } else {
-            row.style.display = 'none';
+            linha.style.display = 'none';
           }
         });
 
-        const container = table.closest('.sheet-container');
-        if (container) {
-          container.style.display = (visiveis > 0 || termo === '') ? 'block' : 'none';
-        }
+        container.style.display = (visiveis > 0 || termo === '') ? 'block' : 'none';
       });
 
-      document.getElementById('totalRegistros').textContent = encontrados || totalRegistros;
-    }
+      document.getElementById('total').textContent = termo === '' ? totalRows : encontrados;
+    });
 
-    // Eventos
-    searchInput.addEventListener('input', filtrarTabelas);
-
-    // Iniciar ao carregar a página
-    window.onload = loadAllSheets;
+    // Iniciar carregamento
+    window.onload = carregarPlanilha;
   </script>
 </body>
 </html>
