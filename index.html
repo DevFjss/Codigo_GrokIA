@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TESTE NOTA CDF</title>
+  <title>TESTE</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
     
+    :root {
+      --verde: #00c853;
+    }
+
     body {
       font-family: 'Roboto', sans-serif;
       background: #f8f9fa;
@@ -14,114 +18,146 @@
       padding: 0;
       color: #333;
     }
+
     .header {
-      background: #00c853;
+      background: var(--verde);
       color: white;
-      padding: 20px 0;
+      padding: 25px 0;
       text-align: center;
-      font-size: 2.4rem;
+      font-size: 2.5rem;
       font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+
     .tabs {
       background: white;
       padding: 15px 20px;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow-x: auto;
+      white-space: nowrap;
     }
+
     .tab-button {
-      padding: 10px 24px;
-      margin: 5px;
+      padding: 12px 26px;
+      margin: 6px;
       border: none;
-      background: #e0e0e0;
-      color: #333;
+      background: #e9ecef;
+      color: #444;
       border-radius: 30px;
       cursor: pointer;
       font-size: 1.05rem;
       font-weight: 500;
+      transition: all 0.3s;
     }
+
     .tab-button.active {
-      background: #00c853;
+      background: var(--verde);
       color: white;
+      box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
     }
+
     .search-box {
-      max-width: 800px;
+      max-width: 850px;
       margin: 25px auto;
       padding: 0 15px;
     }
+
     #searchInput {
       width: 100%;
-      padding: 16px 20px;
-      font-size: 1.15rem;
-      border: 2px solid #ddd;
+      padding: 18px 24px;
+      font-size: 1.2rem;
+      border: 3px solid #ddd;
       border-radius: 50px;
       outline: none;
+      transition: all 0.3s;
     }
+
     #searchInput:focus {
-      border-color: #00c853;
-      box-shadow: 0 0 0 4px rgba(0,200,83,0.15);
+      border-color: var(--verde);
+      box-shadow: 0 0 0 5px rgba(0,200,83,0.15);
     }
+
     .sheet-container {
-      max-width: 1400px;
+      max-width: 1450px;
       margin: 20px auto;
       background: white;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
     }
+
     .sheet-header {
       background: #1e1e1e;
       color: white;
-      padding: 16px 25px;
-      font-size: 1.4rem;
+      padding: 18px 25px;
+      font-size: 1.45rem;
       font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
     }
+
     th {
-      background: #f8f9fa;
-      padding: 14px 12px;
+      background: #f1f3f5;
+      padding: 15px 12px;
       text-align: left;
       font-weight: 600;
       position: sticky;
       top: 0;
       z-index: 10;
+      border-bottom: 2px solid #ddd;
     }
+
     td {
-      padding: 12px 14px;
+      padding: 13px 14px;
       border-bottom: 1px solid #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
     tr:hover {
       background-color: #f0fff0;
     }
+
     .valor {
       text-align: right;
-      color: #006400;
       font-weight: 500;
+      color: #006400;
     }
+
     .loading, .error {
       text-align: center;
-      padding: 80px;
-      font-size: 1.3rem;
+      padding: 100px 20px;
+      font-size: 1.35rem;
     }
+
     .error { color: #d32f2f; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    TESTE NOTA CDF
+    TESTE
   </div>
 
+  <!-- Abas -->
   <div class="tabs" id="tabs"></div>
 
+  <!-- Caixa de Pesquisa -->
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="🔍 Pesquise em qualquer coluna...">
   </div>
 
+  <!-- Conteúdo -->
   <div id="content">
-    <div class="loading">🔄 Carregando abas...</div>
+    <div class="loading">🔄 Carregando abas da planilha...</div>
   </div>
 
   <script>
@@ -131,16 +167,20 @@
     const content = document.getElementById('content');
     const searchInput = document.getElementById('searchInput');
 
-    // Lista de abas (coloque os nomes exatos que aparecem na sua planilha)
+    let currentRows = [];   // Cache para filtro ultra rápido
+    let debounceTimer = null;
+
+    // === COLOQUE AQUI OS NOMES EXATOS DAS ABAS DA SUA PLANILHA ===
     const abas = [
       { nome: "GeradorManut" },
       { nome: "GeradorFaed" },
       { nome: "BaseOrdinaria" },
       { nome: "Retorno439" }
-      // Adicione mais abas aqui se tiver:
-      // { nome: "Nome da Outra Aba" }
+      // Adicione mais abas aqui:
+      // { nome: "NomeExatoDaAba" }
     ];
 
+    // Criar botões das abas
     function criarAbas() {
       tabsContainer.innerHTML = '';
       abas.forEach(aba => {
@@ -152,6 +192,7 @@
       });
     }
 
+    // Carregar aba selecionada
     async function carregarAba(nomeAba) {
       content.innerHTML = `<div class="loading">🔄 Carregando ${nomeAba}...</div>`;
 
@@ -159,7 +200,7 @@
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}`;
         
         const res = await fetch(url);
-        if (!res.ok) throw new Error("Não foi possível acessar");
+        if (!res.ok) throw new Error("Falha ao acessar a aba");
 
         const csvText = await res.text();
         const linhas = csvText.trim().split('\n').map(row => 
@@ -173,7 +214,9 @@
 
         let html = `
           <div class="sheet-container">
-            <div class="sheet-header">${nomeAba} — ${dados.length} registros</div>
+            <div class="sheet-header">
+              ${nomeAba} — ${dados.length} registros
+            </div>
             <table>
               <thead><tr>`;
 
@@ -191,7 +234,10 @@
               classe = 'valor';
               const num = parseFloat(celula.replace(/[^0-9.,-]/g, '').replace(',', '.'));
               if (!isNaN(num)) {
-                celula = num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                celula = num.toLocaleString('pt-BR', { 
+                  style: 'currency', 
+                  currency: 'BRL' 
+                });
               }
             }
             html += `<td class="${classe}">${celula}</td>`;
@@ -202,30 +248,42 @@
         html += `</tbody></table></div>`;
         content.innerHTML = html;
 
-        // Ativa o botão da aba
+        // Cache das linhas para filtro super rápido
+        currentRows = Array.from(document.querySelectorAll('#content tbody tr'));
+
+        // Ativar botão da aba
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         const activeBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.textContent === nomeAba);
         if (activeBtn) activeBtn.classList.add('active');
 
       } catch (err) {
         console.error(err);
-        content.innerHTML = `<div class="error">❌ Não conseguiu carregar "${nomeAba}".<br>Confira se a planilha está pública (Qualquer pessoa com o link pode visualizar).</div>`;
+        content.innerHTML = `<div class="error">
+          ❌ Não foi possível carregar a aba "<strong>${nomeAba}</strong>".<br><br>
+          Verifique se a planilha está compartilhada como:<br>
+          <strong>"Qualquer pessoa com o link pode visualizar"</strong>
+        </div>`;
       }
     }
 
-    // Filtro em tempo real
+    // Filtro ULTRA RÁPIDO com debounce
     searchInput.addEventListener('input', () => {
-      const termo = searchInput.value.toLowerCase().trim();
-      const linhas = document.querySelectorAll('#content tbody tr');
-      linhas.forEach(linha => {
-        linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
-      });
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const termo = searchInput.value.toLowerCase().trim();
+        
+        currentRows.forEach(linha => {
+          linha.style.display = linha.textContent.toLowerCase().includes(termo) ? '' : 'none';
+        });
+      }, 120); // 120ms - ótimo equilíbrio entre velocidade e responsividade
     });
 
-    // Iniciar
+    // Inicializar
     window.onload = () => {
       criarAbas();
-      if (abas.length > 0) carregarAba(abas[0].nome);
+      if (abas.length > 0) {
+        carregarAba(abas[0].nome);
+      }
     };
   </script>
 </body>
