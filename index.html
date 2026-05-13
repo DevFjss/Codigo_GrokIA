@@ -140,16 +140,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-
         .message {
             padding: 15px;
             border-radius: 8px;
@@ -181,13 +171,6 @@
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-            display: block;
-        }
-
-        .message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
             display: block;
         }
 
@@ -296,7 +279,7 @@
             <div id="message" class="message"></div>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
-                <p style="margin-top: 10px; color: #667eea;">Enviando dados...</p>
+                <p style="margin-top: 10px; color: #667eea;">Enviando dados para o Google Sheets...</p>
             </div>
         </div>
     </div>
@@ -331,122 +314,32 @@
             }
         });
         
-        // Função para encontrar a próxima linha vazia a partir da A5
-        async function encontrarProximaLinha() {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:A`;
-            
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erro ao acessar a planilha');
-                }
-                
-                const data = await response.json();
-                const valores = data.values || [];
-                
-                // Procurar a partir da linha 5 (índice 4 em array)
-                let proximaLinha = 5;
-                for (let i = 4; i < valores.length; i++) {
-                    if (valores[i] && valores[i][0] && valores[i][0].trim() !== '') {
-                        proximaLinha = i + 2;
-                    } else {
-                        proximaLinha = i + 1;
-                        break;
-                    }
-                }
-                
-                return proximaLinha;
-            } catch (error) {
-                console.error('Erro ao encontrar próxima linha:', error);
-                return 5; // Retorna linha 5 como padrão em caso de erro
-            }
-        }
-        
-        // Função para enviar dados para o Google Sheets via Google Apps Script Web App
+        // Função para enviar dados para o Google Sheets
         async function enviarParaGoogleSheets(dados) {
-            // URL do Web App do Google Apps Script (Você precisa criar e publicar)
-            // Substitua pela URL do seu Web App após criar o script
-            const WEB_APP_URL = https://script.google.com/macros/s/AKfycbzSq691BAimC1TLH-R98kANexecUTc4AAN-82J4HgQESn7wpzOIqFRx9zrQXEq6_1M1mg/exec';
-            
-            // Alternativa: Usar sheets.googleapis.com diretamente (requer API key)
-            // Para este exemplo, vamos usar uma abordagem com fetch
-            const proximaLinha = await encontrarProximaLinha();
-            
-            const valores = [[
-                dados.nte,
-                dados.municipio,
-                dados.codigoSec,
-                dados.codigoInep,
-                dados.unidadeEscolar,
-                dados.diretor,
-                dados.idCusto,
-                dados.numCartao,
-                dados.cpf
-            ]];
-            
-            const range = `${SHEET_NAME}!A${proximaLinha}:I${proximaLinha}`;
-            
-            // Método: Usando Google Apps Script Web App (Recomendado)
-            // Você precisa criar um script no Google Apps Script com este código:
-            /*
-            function doPost(e) {
-              const sheet = SpreadsheetApp.openById('17gVoxDcEULUa6Cn0rXIrU1DsLBSNDWYbKOxHOEumwNU').getSheetByName('Dados Portador');
-              const data = JSON.parse(e.postData.contents);
-              const nextRow = sheet.getLastRow() + 1;
-              if (nextRow < 5) nextRow = 5;
-              sheet.getRange(nextRow, 1, 1, data.length).setValues([data]);
-              return ContentService.createTextOutput(JSON.stringify({success: true}));
-            }
-            */
+            // URL do Web App do Google Apps Script
+            // IMPORTANTE: Você precisa criar um Web App no Google Apps Script e substituir esta URL
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3meyoRW9_DiC2Ur113ztxKFDYgiSxOFf6F8HtGDX4y2loh7qDq7MTQYP46x8ICrAq_w/exec';
             
             try {
-                // Tentativa com Web App (se configurado)
+                // Tentar enviar via POST para o Web App
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(valores[0])
+                    body: JSON.stringify({
+                        sheetId: SPREADSHEET_ID,
+                        sheetName: SHEET_NAME,
+                        dados: dados
+                    })
                 });
                 
-                return { success: true, message: 'Dados enviados com sucesso!' };
+                return { success: true, message: '✅ Dados enviados com sucesso para o Google Sheets!' };
             } catch (error) {
-                console.error('Erro ao enviar via Web App:', error);
-                throw new Error('Não foi possível enviar os dados. Verifique se o Web App está configurado corretamente.');
+                console.error('Erro ao enviar:', error);
+                throw new Error('Erro ao enviar dados. Verifique a configuração do Web App.');
             }
-        }
-        
-        // Função para salvar dados localmente (fallback/export)
-        function salvarLocalmente(dados) {
-            const registros = JSON.parse(localStorage.getItem('registros_portadores') || '[]');
-            registros.push({
-                ...dados,
-                dataEnvio: new Date().toISOString()
-            });
-            localStorage.setItem('registros_portadores', JSON.stringify(registros));
-            
-            // Exportar como CSV
-            let csv = "NTE,MUNICIPIO,CODIGO SEC,CODIGO INEP,UNIDADE ESCOLAR,DIRETOR(A),ID DE CUSTO,Nº CARTÃO,CPF\n";
-            registros.forEach(reg => {
-                csv += `${reg.nte},${reg.municipio},${reg.codigoSec},${reg.codigoInep},${reg.unidadeEscolar},${reg.diretor},${reg.idCusto},${reg.numCartao},${reg.cpf}\n`;
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `portadores_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
         }
         
         // Evento de submit do formulário
@@ -469,7 +362,7 @@
             // Validar campos
             for (let [key, value] of Object.entries(dados)) {
                 if (!value) {
-                    mostrarMensagem(`Por favor, preencha o campo ${key.toUpperCase()}`, 'error');
+                    mostrarMensagem(`⚠️ Por favor, preencha o campo ${getNomeCampo(key)}`, 'error');
                     return;
                 }
             }
@@ -477,7 +370,7 @@
             // Validar CPF
             const cpfLimpo = dados.cpf.replace(/\D/g, '');
             if (cpfLimpo.length !== 11) {
-                mostrarMensagem('CPF inválido. Deve conter 11 dígitos.', 'error');
+                mostrarMensagem('❌ CPF inválido. Deve conter 11 dígitos.', 'error');
                 return;
             }
             
@@ -486,23 +379,31 @@
             document.getElementById('message').className = 'message';
             
             try {
-                // Tentar enviar para Google Sheets
+                // Enviar para Google Sheets
                 const resultado = await enviarParaGoogleSheets(dados);
-                mostrarMensagem(resultado.message || 'Dados enviados com sucesso para o Google Sheets!', 'success');
+                mostrarMensagem(resultado.message, 'success');
                 limparFormulario();
-                
-                // Opcional: Salvar localmente também
-                salvarLocalmente(dados);
-                
             } catch (error) {
-                console.error('Erro detalhado:', error);
-                mostrarMensagem('Erro ao enviar para o Google Sheets. Os dados foram salvos localmente e exportados em CSV.', 'info');
-                salvarLocalmente(dados);
-                limparFormulario();
+                mostrarMensagem('❌ ' + error.message, 'error');
             } finally {
                 document.getElementById('loading').classList.remove('active');
             }
         });
+        
+        function getNomeCampo(key) {
+            const nomes = {
+                nte: 'NTE',
+                municipio: 'MUNICÍPIO',
+                codigoSec: 'CÓDIGO SEC',
+                codigoInep: 'CÓDIGO INEP',
+                unidadeEscolar: 'UNIDADE ESCOLAR',
+                diretor: 'DIRETOR(A)',
+                idCusto: 'ID DE CUSTO',
+                numCartao: 'Nº CARTÃO',
+                cpf: 'CPF'
+            };
+            return nomes[key] || key;
+        }
         
         function limparFormulario() {
             document.getElementById('nte').value = '';
@@ -525,33 +426,6 @@
                 messageDiv.className = 'message';
             }, 5000);
         }
-        
-        // Instruções de configuração do Google Apps Script
-        console.log('%c📋 CONFIGURAÇÃO NECESSÁRIA:', 'color: #ff6b6b; font-size: 16px; font-weight: bold;');
-        console.log('%c1. Acesse: https://script.google.com/', 'color: #4ecdc4; font-size: 14px;');
-        console.log('%c2. Crie um novo projeto e cole o código do doPost()', 'color: #4ecdc4; font-size: 14px;');
-        console.log('%c3. Publique como Web App (Executar como: Eu, Acesso: Qualquer pessoa)', 'color: #4ecdc4; font-size: 14px;');
-        console.log('%c4. Copie a URL gerada e substitua em WEB_APP_URL no código', 'color: #4ecdc4; font-size: 14px;');
-        
-        // Adicionar instruções na página
-        const instrucoes = document.createElement('div');
-        instrucoes.style.marginTop = '20px';
-        instrucoes.style.padding = '15px';
-        instrucoes.style.background = '#f8f9fa';
-        instrucoes.style.borderRadius = '8px';
-        instrucoes.style.fontSize = '12px';
-        instrucoes.style.color = '#666';
-        instrucoes.innerHTML = `
-            <strong>📌 Instruções para configurar o Google Sheets:</strong><br>
-            1. Acesse <a href="https://script.google.com/" target="_blank">Google Apps Script</a><br>
-            2. Crie um novo projeto e cole o código do doPost() (veja no console)<br>
-            3. Publique como Web App (Executar como: Eu, Acesso: Qualquer pessoa)<br>
-            4. Copie a URL gerada e atualize a variável WEB_APP_URL no código<br>
-            5. Compartilhe a planilha com o email do Web App<br>
-            <br>
-            <em>Enquanto não configura, os dados são salvos localmente e exportados em CSV!</em>
-        `;
-        document.querySelector('.form-section').appendChild(instrucoes);
     </script>
 </body>
 </html>
